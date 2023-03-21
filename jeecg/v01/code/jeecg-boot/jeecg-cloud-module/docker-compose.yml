@@ -1,0 +1,41 @@
+version: '2'
+services:
+  jeecg-boot-nacos:
+    restart: always
+    build:
+      context: ./jeecg-cloud-nacos
+    ports:
+      - 8848:8848
+    container_name: jeecg-boot-nacos
+    hostname: jeecg-boot-nacos
+
+  jeecg-boot-system:
+    depends_on:
+      - jeecg-boot-nacos
+    build:
+      context: ./jeecg-cloud-system-start
+    container_name: jeecg-boot-system
+    hostname: jeecg-boot-system
+    restart: on-failure
+    environment:
+      - TZ=Asia/Shanghai
+
+  jeecg-boot-gateway:
+    restart: on-failure
+    build:
+      context: ./jeecg-cloud-gateway
+    ports:
+      - 9999:9999
+    depends_on:
+      - jeecg-boot-nacos
+      - jeecg-boot-system
+    container_name: jeecg-boot-gateway
+    hostname: jeecg-boot-gateway
+
+#  jeecg-boot-xxljob:
+#    build:
+#      context: ./jeecg-cloud-xxljob
+#    ports:
+#      - 9080:9080
+#    container_name: jeecg-boot-xxljob
+#    hostname: jeecg-boot-xxljob

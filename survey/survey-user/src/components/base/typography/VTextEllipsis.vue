@@ -1,0 +1,56 @@
+<!--
+ * @Author: “Augsut-Rushme”
+ * @Date: 2022-10-04 20:09:25
+ * @LastEditors: “Augsut-Rushme” 864011713@qq.com
+ * @LastEditTime: 2022-10-07 23:26:33
+ * @FilePath: \survey-user\src\components\base\typography\VTextEllipsis.vue
+ * @Description:
+ *
+ * Copyright (c) 2022 by “Augsut-Rushme” 864011713@qq.com, All Rights Reserved.
+-->
+<script setup lang="ts">
+import { CssUnitRe } from '/@src/utils/regex'
+
+export interface VTextEllipsisProps {
+  width?: string
+  mobileWidth?: string
+}
+
+const props = withDefaults(defineProps<VTextEllipsisProps>(), {
+  width: '150px',
+  mobileWidth: undefined,
+})
+const mobileWidthValue = props.mobileWidth ?? props.width
+
+if (props.width.match(CssUnitRe) === null) {
+  console.warn(
+    `VTextEllipsis: invalid "${props.width}" width. Should be a valid css unit value.`
+  )
+}
+if (mobileWidthValue.match(CssUnitRe) === null) {
+  console.warn(
+    `VTextEllipsis: invalid "${mobileWidthValue}" mobileWidth. Should be a valid css unit value.`
+  )
+}
+</script>
+
+<template>
+  <span class="text-ellipsis">
+    <slot></slot>
+  </span>
+</template>
+
+<style lang="scss" scoped>
+.text-ellipsis {
+  max-width: v-bind('props.width');
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 767px) {
+  .text-ellipsis {
+    max-width: v-bind('mobileWidthValue');
+  }
+}
+</style>
