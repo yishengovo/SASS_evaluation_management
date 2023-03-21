@@ -63,7 +63,6 @@
 
 	<modules>
         <module>jeecg-boot-base</module>
-        <module>jeecg-boot-module-demo</module>
         <module>jeecg-boot-module-system</module>
 <!--		<module>survey</module>-->
 	</modules>
