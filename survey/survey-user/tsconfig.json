@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "removeComments": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "lib": ["esnext", "dom"],
+    "types": [
+      "vite/client",
+      "vite-plugin-pwa/client",
+      "@intlify/vite-plugin-vue-i18n/client",
+      "typed-router.d.ts"
+    ],
+    "paths": {
+      "/@src/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "types/**/*.d.ts",
+    "auto-imports.d.ts",
+    "typed-router.d.ts",
+    "components.d.ts",
+    "components-global.d.ts",
+    "src/**/*.js",
+    "src/**/*.ts",
+    "src/**/*.vue"
+  ],
+  "exclude": ["bulma-colors.ts"]
+}

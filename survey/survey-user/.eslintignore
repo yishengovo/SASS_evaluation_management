@@ -1,0 +1,13 @@
+# Ignore artifacts:
+build
+dist
+coverage
+node_modules
+public
+
+README.md
+CHANGELOG.md
+components.d.ts
+typed-router.d.ts
+auto-imports.d.ts
+bulma-colors.js
