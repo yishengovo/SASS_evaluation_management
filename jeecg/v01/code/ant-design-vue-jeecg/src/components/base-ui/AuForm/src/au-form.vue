@@ -87,28 +87,28 @@
 export default {
   model: {
     prop: 'modelValue',
-    event: 'update:modelValue'
+    event: 'update:modelValue',
   },
   props: {
     // 表单数据
     modelValue: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
     formItems: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     // 是否禁用选择组件
     isDisabled: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
 
   data() {
     return {
-      formData: { ...this.modelValue }
+      formData: { ...this.modelValue },
     }
   },
   mounted() {
@@ -121,8 +121,8 @@ export default {
         console.log(val)
         this.$emit('update:modelValue', val)
       },
-      deep: true
-    }
+      deep: true,
+    },
   },
   methods: {
     handleChange(value) {
@@ -130,8 +130,8 @@ export default {
     },
     handleChangeSwitch(value) {
       this.formData = { ...this.formData, isUse: value }
-    }
-  }
+    },
+  },
 }
 </script>
 <style lang="less" scoped></style>
