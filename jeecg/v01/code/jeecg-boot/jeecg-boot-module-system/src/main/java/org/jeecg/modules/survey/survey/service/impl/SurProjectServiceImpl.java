@@ -6,7 +6,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import java.util.*;
+import java.util.stream.Collectors;
+import org.jeecg.modules.survey.client.entity.SurTag;
 import org.jeecg.modules.survey.client.req.ProjectAdvancedQueryReq;
+import org.jeecg.modules.survey.client.service.ISurTagService;
 import org.jeecg.modules.survey.survey.dto.*;
 import org.jeecg.modules.survey.survey.entity.*;
 import org.jeecg.modules.survey.survey.mapper.*;
@@ -14,6 +18,7 @@ import org.jeecg.modules.survey.survey.req.CollectReq;
 import org.jeecg.modules.survey.survey.req.ProjectEditReq;
 import org.jeecg.modules.survey.survey.req.SetProjectSurveyReq;
 import org.jeecg.modules.survey.survey.service.ISurProjectService;
+import org.jeecg.modules.survey.survey.service.ISurveyService;
 import org.jeecg.modules.survey.survey.utils.NumUtils;
 import org.jeecg.modules.system.entity.SysTenant;
 import org.jeecg.modules.system.entity.SysUser;
@@ -21,9 +26,6 @@ import org.jeecg.modules.system.service.ISysTenantService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @Description: 问卷项目表 @Author: jeecg-boot @Date: 2022-07-01 @Version: V1.0
@@ -43,6 +45,8 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
   @Autowired private SurQuestionMapper questionMapper;
   @Autowired private SurQuestionChoiceMapper questionChoiceMapper;
   @Autowired private ISysTenantService sysTenantService;
+  @Autowired private ISurTagService tagService;
+  @Autowired private ISurveyService surveyService;
 
   @Override
   public Boolean setSurvey(SetProjectSurveyReq req) {
@@ -502,6 +506,108 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
         });
     page.setRecords(records);
     return page;
+  }
+
+  @Override
+  public long getDataScreenSurveyCount() {
+    return surveyService.count();
+  }
+
+  @Override
+  public long getDataScreenTagCount() {
+    return tagService.count();
+  }
+
+  @Override
+  public long getDataScreenProjectCount() {
+    return count();
+  }
+
+  @Override
+  public long getDataScreenCount() {
+    long surveyCount = getDataScreenSurveyCount();
+    long tagCount = getDataScreenTagCount();
+    long projectCount = getDataScreenProjectCount();
+    return surveyCount + tagCount + projectCount;
+  }
+
+  @Override
+  public JSONObject getProjectDistribution() {
+    JSONObject result = new JSONObject();
+    // 查询360度评估
+    long count360 = count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getType, "360度评估"));
+    DataScreenProjectDisDto dto1 = new DataScreenProjectDisDto();
+    dto1.setName("360度评估");
+    dto1.setValue(count360);
+    // 查询调查
+    long countInvestigate =
+        count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getType, "调查"));
+    DataScreenProjectDisDto dto2 = new DataScreenProjectDisDto();
+    dto2.setName("调查");
+    dto2.setValue(countInvestigate);
+    // 查询测评
+    long countEvaluation =
+        count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getType, "测评"));
+    DataScreenProjectDisDto dto3 = new DataScreenProjectDisDto();
+    dto3.setName("测评");
+    dto3.setValue(countEvaluation);
+    List<DataScreenProjectDisDto> dtoList = new ArrayList<>();
+    Collections.addAll(dtoList, dto1, dto2, dto3);
+    result.put("data", dtoList);
+    return result;
+  }
+
+  @Override
+  public JSONObject getTagDistribution() {
+    JSONObject result = new JSONObject();
+    // 查询问卷列表
+    List<Survey> surveyList = surveyService.list();
+    // 查询标签列表
+    List<SurTag> tagList = tagService.list();
+    // 转换为名字
+    List<String> tagNames = tagList.stream().map(SurTag::getTagName).collect(Collectors.toList());
+    result.put("categories", tagNames);
+    List<Integer> seriesList = new ArrayList<>();
+    JSONObject seriesObj = new JSONObject();
+    seriesObj.put("name", "使用量");
+    // 遍历标签列表
+    for (SurTag tag : tagList) {
+      // 查询该标签的使用量
+      int i = 0;
+      for (Survey survey : surveyList) {
+        if (survey.getTagRowkeys().contains(tag.getId())) {
+          i++;
+        }
+      }
+      seriesList.add(i);
+    }
+    seriesObj.put("data", seriesList);
+    List<JSONObject> resList = new ArrayList<>();
+    resList.add(seriesObj);
+    result.put("series", resList);
+    JSONObject data = new JSONObject();
+    data.put("data", result);
+    return data;
+  }
+
+  @Override
+  public JSONObject getProjectRelease() {
+    JSONObject result = new JSONObject();
+    // 查询已发布
+    long count360 = count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getIsPublish, true));
+    DataScreenProjectDisDto dto1 = new DataScreenProjectDisDto();
+    dto1.setName("已发布");
+    dto1.setValue(count360);
+    // 查询未发布
+    long countInvestigate =
+        count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getIsPublish, false));
+    DataScreenProjectDisDto dto2 = new DataScreenProjectDisDto();
+    dto2.setName("未发布");
+    dto2.setValue(countInvestigate);
+    List<DataScreenProjectDisDto> dtoList = new ArrayList<>();
+    Collections.addAll(dtoList, dto1, dto2);
+    result.put("data", dtoList);
+    return result;
   }
 
   // 总销售额卡片数据

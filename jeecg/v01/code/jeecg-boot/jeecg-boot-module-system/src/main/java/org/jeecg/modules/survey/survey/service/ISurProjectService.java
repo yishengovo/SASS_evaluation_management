@@ -1,7 +1,9 @@
 package org.jeecg.modules.survey.survey.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.List;
 import org.jeecg.modules.survey.client.req.ProjectAdvancedQueryReq;
 import org.jeecg.modules.survey.survey.dto.CollectDto;
 import org.jeecg.modules.survey.survey.dto.DashBordDto;
@@ -11,8 +13,6 @@ import org.jeecg.modules.survey.survey.req.CollectReq;
 import org.jeecg.modules.survey.survey.req.ProjectEditReq;
 import org.jeecg.modules.survey.survey.req.SetProjectSurveyReq;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * @Description: 问卷项目表 @Author: jeecg-boot @Date: 2022-07-01 @Version: V1.0
@@ -41,4 +41,19 @@ public interface ISurProjectService extends IService<SurProject> {
   DashBordDto getDashBordData();
   // 条件查询
   Page<SurProject> getProjectList(ProjectAdvancedQueryReq req);
+
+  // 数据大屏 问卷个数
+  long getDataScreenSurveyCount();
+  // 数据大屏 标签个数
+  long getDataScreenTagCount();
+  // 数据大屏 项目个数
+  long getDataScreenProjectCount();
+  // 数据大屏 总量
+  long getDataScreenCount();
+  // 数据大屏 项目类型分布
+  JSONObject getProjectDistribution();
+  // 数据大屏 问卷标签占比
+  JSONObject getTagDistribution();
+  // 数据大屏 项目发布占比
+  JSONObject getProjectRelease();
 }
