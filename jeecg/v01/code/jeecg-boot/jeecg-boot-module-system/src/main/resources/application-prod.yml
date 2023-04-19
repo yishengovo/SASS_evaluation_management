@@ -1,5 +1,5 @@
 server:
-  port: 27002
+  port: 27008
   tomcat:
     max-swallow-size: -1
   error:
