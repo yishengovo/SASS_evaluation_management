@@ -57,7 +57,7 @@ watchEffect(() => {
     <div class="navbar-menu" :class="[isMobileNavOpen && 'is-active']">
       <div class="navbar-start">
         <div class="navbar-item">
-          <RouterLink
+          <!-- <RouterLink
             to="/"
             class="nav-link"
             @click.passive="
@@ -68,7 +68,7 @@ watchEffect(() => {
             "
           >
             问卷测评系统
-          </RouterLink>
+          </RouterLink> -->
         </div>
       </div>
 
