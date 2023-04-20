@@ -5,12 +5,10 @@
         <div class="header">
           <a href="/">
             <img src="~@/assets/logo2.png" class="logo" alt="logo" />
-            <span class="title">朗新天霁</span>
+            <!-- <span class="title">SURVEYPRO</span> -->
           </a>
         </div>
-        <div class="desc">
-          朗新天霁 中国最具影响力的 专业人力资源管理软件开发企业
-        </div>
+        <!-- <div class="desc">测评无忧，SURVEYPRO帮你搞定！</div> -->
       </div>
 
       <route-view></route-view>
@@ -23,7 +21,7 @@
         </div>
         <div class="copyright">
           Copyright &copy; 2022
-          <a href="http://www.hrsoft.com.cn/" target="_blank">厦门朗新天霁软件技术有限公司</a> 出品
+          <a href="http://www.hrsoft.com.cn/" target="_blank">海南师范大学图灵实验室</a> 出品
         </div>
       </div>
     </div>
@@ -46,7 +44,7 @@ export default {
   },
   beforeDestroy() {
     document.body.classList.remove('userLayout')
-  }
+  },
 }
 </script>
 
@@ -79,8 +77,9 @@ export default {
       text-align: center;
 
       .header {
-        height: 44px;
+        height: 80px;
         line-height: 44px;
+        margin-bottom: 10px;
 
         .badge {
           position: absolute;
@@ -93,9 +92,10 @@ export default {
         }
 
         .logo {
-          height: 44px;
+          height: 80px;
           vertical-align: top;
           margin-right: 16px;
+
           border-style: none;
         }
 
