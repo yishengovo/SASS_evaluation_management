@@ -116,6 +116,13 @@ public interface IUserProjectService extends IService<UserProject> {
   List<Survey> getEvaluationSurveyList(String projectId);
   // 查询问卷模板
   PageResp<Survey> getSurveyTemplateList(ProjectAdvancedQueryReq req, String tenantId);
+  // 查询租户自己的问卷模板
+  PageResp<Survey> getExclusiveSurveyTemplateList(ProjectAdvancedQueryReq req, String tenantId);
+  // 辅助查询，查询租户和问卷的关系
+  Boolean getTenantAndSurveyRelation(PurchaseReq req, String tenantId);
+  // 通过积分购买问卷模板
+  @Transactional(rollbackFor = Exception.class)
+  Boolean purchaseByPoint(PurchaseReq req, String tenantId);
   // 根据问卷模板id查询问卷模板
   Survey getSurveyTemplateById(String id);
   // 测评项目设置测评问卷
