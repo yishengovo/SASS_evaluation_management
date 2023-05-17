@@ -19,6 +19,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.survey.survey.service.impl.SurveyServiceImpl;
 import org.jeecg.modules.system.entity.SysTenant;
 import org.jeecg.modules.system.service.ISysTenantService;
 import org.jeecg.common.system.base.controller.JeecgController;
@@ -166,6 +167,15 @@ public class SurveyController extends JeecgController<Survey, ISurveyService> {
 			 return Result.ok("设置成功");
 		 }
 		 return Result.error(500,"设置失败");
+	 }
+
+	 //消耗积分
+	 @AutoLog(value = "survey-购买问卷模板积分")
+	 @ApiOperation(value = "survey-购买问卷模板积分", notes = "survey-购买问卷模板积分")
+	 @GetMapping(value = "/buyCredit")
+	 public Result<String> buyCredit(@RequestParam(name="id",required=true) String id){
+		 String surveyCredit = surveyService.getSurveyCredit(id);
+		 return Result.ok(surveyCredit);
 	 }
 
 
@@ -342,6 +352,9 @@ public class SurveyController extends JeecgController<Survey, ISurveyService> {
     public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
         return super.importExcel(request, response, Survey.class);
     }
+
+
+
 
 
 }

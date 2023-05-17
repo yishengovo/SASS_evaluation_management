@@ -225,4 +225,13 @@ public class SurveyServiceImpl extends ServiceImpl<SurveyMapper, Survey> impleme
     }
     return result;
   }
+
+  @Override
+  public String getSurveyCredit(String id) {
+    Survey survey = surveyMapper.selectById(id);
+    String credit = survey.getCredit().toString();
+    return credit;
+  }
+
+
 }
