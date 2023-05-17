@@ -30,8 +30,8 @@ useHead({
       <div class="empty">
         <img src="/@src/assets/project/empty.svg" alt="" />
         <div class="desc">暂未开放</div>
-      </div></VCard
-    >
+      </div>
+    </VCard>
   </div>
 </template>
 

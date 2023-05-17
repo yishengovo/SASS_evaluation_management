@@ -7,6 +7,7 @@ import java.util.List;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import org.jeecg.modules.survey.survey.utils.json.CommonStringTypeHandler;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import io.swagger.annotations.ApiModel;
@@ -21,7 +22,7 @@ import lombok.experimental.Accessors;
  * @Version: V1.0
  */
 @Data
-@TableName("survey")
+@TableName(value="survey", autoResultMap = true)
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
 @ApiModel(value="survey对象", description="survey")
@@ -216,5 +217,10 @@ public class Survey implements Serializable {
     @TableField(exist = false)
     //问卷状态  答题状态 0未达题 1答题中  2已完成
     private List<Integer> tenantIdList;
+    @TableField(typeHandler = CommonStringTypeHandler.class)
+    private List<String> tagRowkeys;
 
+    @Excel(name = "问卷积分", width = 15)
+    @ApiModelProperty(value = "问卷积分")
+    private Integer credit;
 }

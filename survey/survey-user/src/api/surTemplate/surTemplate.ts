@@ -16,10 +16,21 @@ const api = useApi()
 
 enum surTemplateApi {
   GetTemplate = '/client/userProject/getSurveyTemplate',
+  GetMyTemplate = '/client/userProject/getExclusiveSurveyTemplate',
+  BuyTemplate = '/client/userProject/purchaseByPoint'
 }
 
 export const getTemplateApi = (
   data: IGetTemplate
 ): Promise<IDataType<ITemplateResult>> => {
-  return api.post(surTemplateApi.GetTemplate, data)
+  if(data.type === '我的') {
+    return api.post(surTemplateApi.GetMyTemplate, data)
+  } else {
+    return api.post(surTemplateApi.GetTemplate, data)
+  }
 }
+
+export const buyTemplateApi = (surveyId: string) => {
+  return api.post(surTemplateApi.BuyTemplate, surveyId)
+}
+

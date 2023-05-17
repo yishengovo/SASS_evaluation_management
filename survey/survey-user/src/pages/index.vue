@@ -60,7 +60,7 @@ useHead({
           <div class="container">
             <div class="columns is-vcentered">
               <div class="column is-5">
-                <h1 class="title is-1 is-bold">高效问卷测评系统</h1>
+                <!-- <h1 class="title is-1 is-bold">高效问卷测评系统</h1> -->
                 <h3 class="subtitle is-4 pt-2 light-text">
                   以一种全新的设计体验，告别繁琐的设计流程，通过简单有趣的方式，轻轻松松完成问卷设计，多种问卷样式模板选择，只为显现更精美的表单问卷。
                 </h3>

@@ -284,7 +284,7 @@ useHead({
             <div class="column is-10 is-offset-1">
               <img
                 class="light-image has-light-shadow has-light-border"
-                src="/@src/assets/illustrations/apps/vuero-banking-light.webp"
+                src="/@src/assets/illustrations/apps/vuero-banking-light.png"
                 alt=""
               />
               <img

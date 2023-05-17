@@ -6,7 +6,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import java.util.*;
+import java.util.stream.Collectors;
+import org.jeecg.modules.survey.client.entity.SurPayment;
+import org.jeecg.modules.survey.client.entity.SurTag;
 import org.jeecg.modules.survey.client.req.ProjectAdvancedQueryReq;
+import org.jeecg.modules.survey.client.service.ISurPaymentService;
+import org.jeecg.modules.survey.client.service.ISurTagService;
 import org.jeecg.modules.survey.survey.dto.*;
 import org.jeecg.modules.survey.survey.entity.*;
 import org.jeecg.modules.survey.survey.mapper.*;
@@ -14,6 +20,7 @@ import org.jeecg.modules.survey.survey.req.CollectReq;
 import org.jeecg.modules.survey.survey.req.ProjectEditReq;
 import org.jeecg.modules.survey.survey.req.SetProjectSurveyReq;
 import org.jeecg.modules.survey.survey.service.ISurProjectService;
+import org.jeecg.modules.survey.survey.service.ISurveyService;
 import org.jeecg.modules.survey.survey.utils.NumUtils;
 import org.jeecg.modules.system.entity.SysTenant;
 import org.jeecg.modules.system.entity.SysUser;
@@ -21,9 +28,6 @@ import org.jeecg.modules.system.service.ISysTenantService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @Description: 问卷项目表 @Author: jeecg-boot @Date: 2022-07-01 @Version: V1.0
@@ -43,6 +47,9 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
   @Autowired private SurQuestionMapper questionMapper;
   @Autowired private SurQuestionChoiceMapper questionChoiceMapper;
   @Autowired private ISysTenantService sysTenantService;
+  @Autowired private ISurTagService tagService;
+  @Autowired private ISurveyService surveyService;
+  @Autowired private ISurPaymentService paymentService;
 
   @Override
   public Boolean setSurvey(SetProjectSurveyReq req) {
@@ -504,11 +511,120 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
     return page;
   }
 
+  @Override
+  public long getDataScreenSurveyCount() {
+    return surveyService.count();
+  }
+
+  @Override
+  public long getDataScreenTagCount() {
+    return tagService.count();
+  }
+
+  @Override
+  public long getDataScreenProjectCount() {
+    return count();
+  }
+
+  @Override
+  public long getDataScreenCount() {
+    long surveyCount = getDataScreenSurveyCount();
+    long tagCount = getDataScreenTagCount();
+    long projectCount = getDataScreenProjectCount();
+    return surveyCount + tagCount + projectCount;
+  }
+
+  @Override
+  public JSONObject getProjectDistribution() {
+    JSONObject result = new JSONObject();
+    // 查询360度评估
+    long count360 = count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getType, "360度评估"));
+    DataScreenProjectDisDto dto1 = new DataScreenProjectDisDto();
+    dto1.setName("360度评估");
+    dto1.setValue(count360);
+    // 查询调查
+    long countInvestigate =
+        count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getType, "调查"));
+    DataScreenProjectDisDto dto2 = new DataScreenProjectDisDto();
+    dto2.setName("调查");
+    dto2.setValue(countInvestigate);
+    // 查询测评
+    long countEvaluation =
+        count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getType, "测评"));
+    DataScreenProjectDisDto dto3 = new DataScreenProjectDisDto();
+    dto3.setName("测评");
+    dto3.setValue(countEvaluation);
+    List<DataScreenProjectDisDto> dtoList = new ArrayList<>();
+    Collections.addAll(dtoList, dto1, dto2, dto3);
+    result.put("data", dtoList);
+    return result;
+  }
+
+  @Override
+  public JSONObject getTagDistribution() {
+    JSONObject result = new JSONObject();
+    // 查询问卷列表
+    List<Survey> surveyList = surveyService.list();
+    // 查询标签列表
+    List<SurTag> tagList = tagService.list();
+    // 转换为名字
+    List<String> tagNames = tagList.stream().map(SurTag::getTagName).collect(Collectors.toList());
+    result.put("categories", tagNames);
+    List<Integer> seriesList = new ArrayList<>();
+    JSONObject seriesObj = new JSONObject();
+    seriesObj.put("name", "使用量");
+    // 遍历标签列表
+    for (SurTag tag : tagList) {
+      // 查询该标签的使用量
+      int i = 0;
+      for (Survey survey : surveyList) {
+        if (survey.getTagRowkeys().contains(tag.getId())) {
+          i++;
+        }
+      }
+      seriesList.add(i);
+    }
+    seriesObj.put("data", seriesList);
+    List<JSONObject> resList = new ArrayList<>();
+    resList.add(seriesObj);
+    result.put("series", resList);
+    JSONObject data = new JSONObject();
+    data.put("data", result);
+    return data;
+  }
+
+  @Override
+  public JSONObject getProjectRelease() {
+    JSONObject result = new JSONObject();
+    // 查询已发布
+    long count360 = count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getIsPublish, true));
+    DataScreenProjectDisDto dto1 = new DataScreenProjectDisDto();
+    dto1.setName("已发布");
+    dto1.setValue(count360);
+    // 查询未发布
+    long countInvestigate =
+        count(new LambdaQueryWrapper<SurProject>().eq(SurProject::getIsPublish, false));
+    DataScreenProjectDisDto dto2 = new DataScreenProjectDisDto();
+    dto2.setName("未发布");
+    dto2.setValue(countInvestigate);
+    List<DataScreenProjectDisDto> dtoList = new ArrayList<>();
+    Collections.addAll(dtoList, dto1, dto2);
+    result.put("data", dtoList);
+    return result;
+  }
+
   // 总销售额卡片数据
   private JSONObject createTotalSalesData() {
     JSONObject totalSales = new JSONObject();
+    List<SurPayment> payments =
+        paymentService.list(
+            new LambdaQueryWrapper<SurPayment>().eq(SurPayment::getSucceeded, true));
+    int total = 0;
+    for (SurPayment payment : payments) {
+      total += payment.getAmount();
+    }
     // 总销售额
-    totalSales.put("total", 15679);
+    totalSales.put("total", total);
     // 周同比
     totalSales.put("weekRate", "12%");
     // 日同比
@@ -522,19 +638,29 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
   private JSONObject createOrdersData() {
     JSONObject orders = new JSONObject();
     // 总订单量
-    orders.put("total", 1048);
+    long count = paymentService.count();
+    orders.put("total", count);
     // 日订单
-    orders.put("day", 56);
+    orders.put("day", 7);
     return orders;
   }
 
   // 总充值笔数卡片数据
   private JSONObject createPaysData() {
     JSONObject pays = new JSONObject();
+    // 订单总数
+    List<SurPayment> paymentList = paymentService.list();
+    // 已支付
+    List<SurPayment> success =
+        paymentList.stream().filter(SurPayment::getSucceeded).collect(Collectors.toList());
     // 支付笔数
-    pays.put("total", 629);
+    pays.put("total", success.size());
     // 转化率
-    pays.put("rate", "61%");
+    if (paymentList.isEmpty()) {
+      pays.put("rate", "0.00%");
+    } else {
+      pays.put("rate", NumUtils.getPercent(success.size(), paymentList.size()));
+    }
     return pays;
   }
 
@@ -556,27 +682,37 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
   private List<RankDto> getRankList() {
     List<RankDto> rankList = new ArrayList<>();
     // 查询所有的租户
-    //    List<SysTenant> tenantList =
-    //        sysTenantService.list(new LambdaQueryWrapper<SysTenant>().ne(SysTenant::getId, 1));
-    RankDto rankDto1 = new RankDto();
-    rankDto1.setName("海翼租赁");
-    rankDto1.setTotal(8790);
-    RankDto rankDto2 = new RankDto();
-    rankDto2.setName("融资租赁");
-    rankDto2.setTotal(3669);
-    RankDto rankDto3 = new RankDto();
-    rankDto3.setName("广汉移动");
-    rankDto3.setTotal(1467);
-    RankDto rankDto4 = new RankDto();
-    rankDto4.setName("阆中移动");
-    rankDto4.setTotal(800);
-    RankDto rankDto5 = new RankDto();
-    rankDto5.setName("南充移动");
-    rankDto5.setTotal(551);
-    RankDto rankDto6 = new RankDto();
-    rankDto6.setName("四川贡井移动公司");
-    rankDto6.setTotal(400);
-    Collections.addAll(rankList, rankDto1, rankDto2, rankDto3, rankDto4, rankDto5, rankDto6);
+    List<SysTenant> tenantList =
+        sysTenantService.list(
+            new LambdaQueryWrapper<SysTenant>()
+                .ne(SysTenant::getId, 1)
+                .orderByDesc(SysTenant::getIntegral));
+    //    RankDto rankDto1 = new RankDto();
+    //    rankDto1.setName("海翼租赁");
+    //    rankDto1.setTotal(8790);
+    //    RankDto rankDto2 = new RankDto();
+    //    rankDto2.setName("融资租赁");
+    //    rankDto2.setTotal(3669);
+    //    RankDto rankDto3 = new RankDto();
+    //    rankDto3.setName("广汉移动");
+    //    rankDto3.setTotal(1467);
+    //    RankDto rankDto4 = new RankDto();
+    //    rankDto4.setName("阆中移动");
+    //    rankDto4.setTotal(800);
+    //    RankDto rankDto5 = new RankDto();
+    //    rankDto5.setName("南充移动");
+    //    rankDto5.setTotal(551);
+    //    RankDto rankDto6 = new RankDto();
+    //    rankDto6.setName("四川贡井移动公司");
+    //    rankDto6.setTotal(400);
+    //    Collections.addAll(rankList, rankDto1, rankDto2, rankDto3, rankDto4, rankDto5, rankDto6);
+    tenantList.forEach(
+        sysTenant -> {
+          RankDto rankDto = new RankDto();
+          rankDto.setName(sysTenant.getName());
+          rankDto.setTotal(sysTenant.getIntegral());
+          rankList.add(rankDto);
+        });
     return rankList;
   }
 
@@ -588,9 +724,9 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
       HistogramDto histogramDto = new HistogramDto();
       histogramDto.setX(i + "月");
       Calendar calendar1 = Calendar.getInstance();
-      calendar1.set(2022, i, 1);
+      calendar1.set(2023, i, 1);
       Calendar calendar2 = Calendar.getInstance();
-      calendar2.set(2022, i + 1, 1);
+      calendar2.set(2023, i + 1, 1);
       Date start = calendar1.getTime();
       Date end = calendar2.getTime();
       List<SurProject> list =
@@ -613,14 +749,14 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
       //      Random rand = new Random();
       //      int randomNumber = rand.nextInt(90) + 10;
       Calendar calendar1 = Calendar.getInstance();
-      calendar1.set(2022, i, 1);
+      calendar1.set(2023, i, 1);
       Calendar calendar2 = Calendar.getInstance();
-      calendar2.set(2022, i + 1, 1);
+      calendar2.set(2023, i + 1, 1);
       Date start = calendar1.getTime();
       Date end = calendar2.getTime();
-      List<SurResult> list =
-          resultMapper.selectList(
-              new LambdaQueryWrapper<SurResult>().between(SurResult::getCreateDate, start, end));
+      List<Survey> list =
+          surveyMapper.selectList(
+              new LambdaQueryWrapper<Survey>().between(Survey::getCreateDate, start, end));
       histogramDto.setY(list.size());
       dataList.add(histogramDto);
     }

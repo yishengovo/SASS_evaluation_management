@@ -12,7 +12,6 @@
     <div class="table-page-search-wrapper">
       <a-form layout="inline" @keyup.enter.native="searchQuery">
         <a-row :gutter="24">
-
           <a-col :md="6" :sm="12">
             <a-form-item label="问卷名称">
               <j-input placeholder="输入问卷名称模糊查询" v-model="queryParam.surName"></j-input>
@@ -31,17 +30,15 @@
           </a-col>
 
           <template v-if="toggleSearchStatus">
-            
             <a-col :md="6" :sm="8">
-            <a-form-item label="问卷启用状态">
-              <a-select v-model="queryParam.isUse" placeholder="请选择项问卷启用状态">
-                <a-select-option value="">请选择</a-select-option>
-                <a-select-option value= true>已启用</a-select-option>
-                <a-select-option value= false>已停用</a-select-option>
-              </a-select>
-            </a-form-item>
+              <a-form-item label="问卷启用状态">
+                <a-select v-model="queryParam.isUse" placeholder="请选择项问卷启用状态">
+                  <a-select-option value="">请选择</a-select-option>
+                  <a-select-option value="true">已启用</a-select-option>
+                  <a-select-option value="false">已停用</a-select-option>
+                </a-select>
+              </a-form-item>
             </a-col>
-          
 
             <!-- <a-col :md="6" :sm="8">
             <a-form-item label="更新时间">
@@ -55,16 +52,15 @@
           </template>
 
           <a-col :md="6" :sm="8">
-            <span style="float: left;overflow: hidden;" class="table-page-search-submitButtons">
+            <span style="float: left; overflow: hidden" class="table-page-search-submitButtons">
               <a-button type="primary" @click="searchQuery" icon="search">查询</a-button>
               <a-button type="primary" @click="searchReset" icon="reload" style="margin-left: 8px">重置</a-button>
               <a @click="handleToggleSearch" style="margin-left: 8px">
                 {{ toggleSearchStatus ? '收起' : '展开' }}
-                <a-icon :type="toggleSearchStatus ? 'up' : 'down'"/>
+                <a-icon :type="toggleSearchStatus ? 'up' : 'down'" />
               </a>
             </span>
           </a-col>
-
         </a-row>
       </a-form>
     </div>
@@ -93,7 +89,7 @@
         <a-menu slot="overlay">
           <a-menu-item key="1" @click="batchDel"><a-icon type="delete" />删除</a-menu-item>
         </a-menu>
-        <a-button style="margin-left: 8px"> 批量操作 <a-icon type="down"/></a-button>
+        <a-button style="margin-left: 8px"> 批量操作 <a-icon type="down" /></a-button>
       </a-dropdown>
     </div>
     <!-- 模式 -->
@@ -125,7 +121,7 @@
                     <a-tag color="#5190de" class="type" v-if="record.type === '360度评估'">
                       {{ record.type }}
                     </a-tag>
-                    <div class="title ">
+                    <div class="title">
                       <a-tooltip>
                         <template slot="title">
                           {{ record.surName }}
@@ -145,18 +141,18 @@
                 </div>
                 <div class="btns">
                   <span class="btn-item">
-                    <a-icon type="edit" style="color: #1890ff; margin-right:2px" />
+                    <a-icon type="edit" style="color: #1890ff; margin-right: 2px" />
                     <a @click="handleEdit(record)">编辑</a>
                   </span>
 
                   <span class="btn-item">
-                    <a-icon type="setting" style="color: #1890ff; margin-right:2px" />
+                    <a-icon type="setting" style="color: #1890ff; margin-right: 2px" />
                     <a @click="handleSurveySetting(record)">设置</a>
                   </span>
 
                   <span class="btn-item">
                     <a-dropdown placement="topLeft">
-                      <a class="ant-dropdown-link">更多 <a-icon type="down"/></a>
+                      <a class="ant-dropdown-link">更多 <a-icon type="down" /></a>
                       <a-menu slot="overlay">
                         <a-menu-item>
                           <a @click="handleDetail(record)">详情</a>
@@ -248,7 +244,7 @@
           <a @click="handleSurveySetting(record)">调查项设置</a>
           <a-divider type="vertical" />
           <a-dropdown>
-            <a class="ant-dropdown-link">更多 <a-icon type="down"/></a>
+            <a class="ant-dropdown-link">更多 <a-icon type="down" /></a>
             <a-menu slot="overlay">
               <a-menu-item>
                 <a @click="handleDetail(record)">详情</a>
@@ -506,14 +502,14 @@ export default {
         lg: 8, // ≥1200px
         md: 12, // ≥992px
         sm: 16, // ≥768px
-        xs: 24 // <768px
-      })
-    }
+        xs: 24, // <768px
+      }),
+    },
   },
   components: {
     AuForm,
     SurveyModal,
-    SurveyCreator
+    SurveyCreator,
   },
   data() {
     return {
@@ -550,7 +546,7 @@ export default {
         },
         showQuickJumper: true,
         showSizeChanger: true,
-        total: 0
+        total: 0,
       },
       tableConfig,
       // 当前问卷id
@@ -576,7 +572,7 @@ export default {
         getBindingsQuestionById: 'survey/surQuestionDimension/queryBindQuestion/',
         saveBindings: 'survey/surQuestionDimension/bindQuestion',
         deleteDimension: 'survey/surQuestionDimension/delete',
-        editDimension: 'survey/surQuestionDimension/edit'
+        editDimension: 'survey/surQuestionDimension/edit',
       },
       dictOptions: {},
       superFieldList: [],
@@ -587,16 +583,16 @@ export default {
       dataSourceEditBindings: [],
       visible: false,
       visibleOPtion: false,
-      creatorId: '' //问卷id
+      creatorId: '', //问卷id
     }
   },
   created() {
     this.getSuperFieldList()
   },
   computed: {
-    importExcelUrl: function() {
+    importExcelUrl: function () {
       return `${window._CONFIG['domianURL']}/${this.url.importExcelUrl}`
-    }
+    },
   },
   methods: {
     // 处理展示模式的改变
@@ -629,15 +625,15 @@ export default {
       const { result: res } = await axios({
         method: 'post',
         url: this.url.questionList,
-        data
+        data,
       })
-      this.dataSourceQuestions = res.records.map(item => {
+      this.dataSourceQuestions = res.records.map((item) => {
         // 获取类型
         const type = getQuestionType(item.typeId)
         return {
           ...item,
           typeId: type,
-          edit: false
+          edit: false,
         }
       })
       this.ipaginationQuestion.total = res.total
@@ -648,25 +644,25 @@ export default {
       this.latitudeOptions = []
       const { result: res } = await axios({
         method: 'get',
-        url: this.url.getLatitude + id
+        url: this.url.getLatitude + id,
       })
       this.latitudeOptions.push({
         value: '全部',
-        label: '全部'
+        label: '全部',
       })
       if (res !== null && res.length > 0) {
-        res.map(item => {
+        res.map((item) => {
           if (item.weight === null) {
             item.weight = '0%'
           }
           this.latitudeOptions.push({
             label: item.name,
-            value: item.id
+            value: item.id,
           })
           if (item.questionList.length > 1) {
             //将question数组中的content合并在一起
             const content = item.questionList
-              .map(item => {
+              .map((item) => {
                 return item.content
               })
               .join('；')
@@ -677,7 +673,7 @@ export default {
           } else if (item.questionList.length === 0) {
             this.dataSourceBindings.push({ ...item })
           } else {
-            item.questionList.forEach(question => {
+            item.questionList.forEach((question) => {
               this.dataSourceBindings.push({ ...item, ...question, id: item.id })
             })
           }
@@ -745,7 +741,7 @@ export default {
       const { result: res } = await axios({
         method: 'post',
         url: this.url.optionList,
-        data
+        data,
       })
       // 将res对象变数组对象 (后端数据格式改动，废弃)
       // Object.keys(res).forEach(key => {
@@ -755,7 +751,7 @@ export default {
         return {
           ...item,
           index,
-          edit: false
+          edit: false,
         }
       })
     },
@@ -775,7 +771,7 @@ export default {
       // 将选项设置为非编辑状态
       records.edit = false
       const score = []
-      this.dataSourceOptions.forEach(item => {
+      this.dataSourceOptions.forEach((item) => {
         score.push(item.basicScore)
       })
       const res = await axios({
@@ -784,8 +780,8 @@ export default {
         data: {
           id: records.id,
           score,
-          pid: records.pid
-        }
+          pid: records.pid,
+        },
       })
       if (res.code !== 200) {
         return this.$message.error('保存失败,请稍后再试')
@@ -821,9 +817,9 @@ export default {
             method: 'delete',
             url: _this.url.deleteDimension,
             params: {
-              id: record.id
-            }
-          }).then(res => {
+              id: record.id,
+            },
+          }).then((res) => {
             if (res.code === 200) {
               _this.$message.success('删除成功')
               _this.getLatitude(_this.currentSurveyId)
@@ -832,7 +828,7 @@ export default {
             }
           })
         },
-        onCancel() {}
+        onCancel() {},
       })
     },
     // 根据维度id获取绑定的问题
@@ -841,23 +837,23 @@ export default {
       this.dataSourceEditBindings = []
       const { result: res } = await axios({
         method: 'post',
-        url: this.url.getBindingsQuestionById + id
+        url: this.url.getBindingsQuestionById + id,
       })
       res.forEach((item, index) => {
         if (item.questionList.length > 0) {
-          item.questionList.forEach(question => {
+          item.questionList.forEach((question) => {
             this.dataSourceEditBindings.push({
               name: item.name,
               bindingsId: item.id,
               ...question,
-              questionId: question.id
+              questionId: question.id,
             })
           })
         }
       })
       // 根据重复的id去重
       this.dataSourceEditBindings = this.dataSourceEditBindings.filter((item, index, arr) => {
-        return arr.findIndex(item2 => item2.id === item.id) === index
+        return arr.findIndex((item2) => item2.id === item.id) === index
       })
       this.confirmLoading = false
       // this.dataSourceBindings = res
@@ -884,9 +880,9 @@ export default {
             url: _this.url.saveBindings,
             data: {
               dimensionId: _this.selectLatitude,
-              questionId: _this.selectedDimensionRowKeys
-            }
-          }).then(res => {
+              questionId: _this.selectedDimensionRowKeys,
+            },
+          }).then((res) => {
             if (res.code !== 200) {
               return _this.$message.error('保存失败,请稍后再试')
             }
@@ -895,7 +891,7 @@ export default {
             _this.getLatitude(_this.currentSurveyId)
           })
         },
-        onCancel() {}
+        onCancel() {},
       })
     },
     // 处理禁选
@@ -903,8 +899,8 @@ export default {
       if (this.dataSourceEditBindings !== null) {
         return {
           props: {
-            disabled: row.name !== null && this.selectLatitude !== row.dimensionId
-          }
+            disabled: row.name !== null && this.selectLatitude !== row.dimensionId,
+          },
         }
       }
     },
@@ -918,7 +914,7 @@ export default {
       }
       this.selectLatitude = value
       this.getBindQuestion(this.currentSurveyId)
-      this.dataSourceBindings.forEach(item => {
+      this.dataSourceBindings.forEach((item) => {
         if (item.id == value && item.rowKeys) {
           this.selectedDimensionRowKeys = JSON.parse(item.rowKeys)
         }
@@ -934,7 +930,7 @@ export default {
       // 遍历dataSourceLatitude，检查是否有权重之和是否为100%
 
       let sum = 0
-      this.dataSourceLatitude.forEach(item => {
+      this.dataSourceLatitude.forEach((item) => {
         sum += parseInt(item.weight.slice(0, -1))
       })
       if (sum !== 100) {
@@ -945,13 +941,13 @@ export default {
           url: this.url.saveWeight,
           data: {
             id: this.currentSurveyId,
-            list: this.dataSourceLatitude.map(item => {
+            list: this.dataSourceLatitude.map((item) => {
               return {
                 id: item.id,
-                weight: item.weight
+                weight: item.weight,
               }
-            })
-          }
+            }),
+          },
         })
         if (result.code !== 200) {
           return this.$message.error('保存失败,请稍后再试')
@@ -977,7 +973,7 @@ export default {
     // 确认添加或编辑纬度
     handleAddLatitudeOk() {
       const formInstance = this.$refs.form
-      formInstance.$refs.formRef.validate(valid => {
+      formInstance.$refs.formRef.validate((valid) => {
         if (valid) {
           if (this.currentDimensionId) {
             axios({
@@ -985,9 +981,9 @@ export default {
               url: this.url.editDimension,
               data: {
                 id: this.currentDimensionId,
-                name: this.model.name
-              }
-            }).then(res => {
+                name: this.model.name,
+              },
+            }).then((res) => {
               if (res.code === 200) {
                 this.$message.success('编辑成功')
                 this.isAddLatitudeVisible = false
@@ -1002,9 +998,9 @@ export default {
               url: this.url.addLatitude,
               data: {
                 surveyId: this.currentSurveyId,
-                name: this.model.name
-              }
-            }).then(res => {
+                name: this.model.name,
+              },
+            }).then((res) => {
               if (res.code !== 200) {
                 return this.$message.error('添加失败,请稍后再试')
               }
@@ -1032,8 +1028,8 @@ export default {
       fieldList.push({ type: 'string', value: 'surName', text: '问卷名称' })
       fieldList.push({ type: 'string', value: 'surContent', text: '描述' })
       fieldList.push({ type: 'string', value: 'sur', text: '租户' })
-    }
-  }
+    },
+  },
 }
 </script>
 <style scoped lang="less">

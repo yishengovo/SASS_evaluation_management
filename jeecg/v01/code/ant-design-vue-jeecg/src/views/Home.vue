@@ -5,7 +5,7 @@
       <h3 style="margin-top: 1rem">Welcome to Your Vue.js App</h3>
     </div>
 
-    <br/>
+    <br />
 
     <h2># Trend 组件 </h2>
 
@@ -71,18 +71,12 @@
 
     <a-divider> CountDown </a-divider>
     <a-card style="margin-bottom: 3rem">
-      <count-down
-        style="font-size: 2rem"
-        :target="new Date().getTime() + 3000000"
-        :on-end="onEndHandle">
+      <count-down style="font-size: 2rem" :target="new Date().getTime() + 3000000" :on-end="onEndHandle">
       </count-down>
 
       <a-divider type="vertical" style="margin: 0 16px" />
 
-      <count-down
-        style="font-size: 2rem"
-        :target="new Date().getTime() + 10000"
-        :on-end="onEndHandle2">
+      <count-down style="font-size: 2rem" :target="new Date().getTime() + 10000" :on-end="onEndHandle2">
       </count-down>
     </a-card>
 
@@ -92,7 +86,8 @@
     <a-card style="margin-bottom: 3rem">
       <ellipsis :length="100" tooltip>
         There were injuries alleged in three cases in 2015, and a
-        fourth incident in September, according to the safety recall report. After meeting with US regulators in October, the firm decided to issue a voluntary recall.
+        fourth incident in September, according to the safety recall report. After meeting with US regulators in October,
+        the firm decided to issue a voluntary recall.
       </ellipsis>
     </a-card>
 
@@ -100,64 +95,62 @@
 
     <a-divider> NumberInfo </a-divider>
     <a-card>
-      <number-info
-        :sub-title="() => { return 'Visits this week' }"
-        :total="12321"
-        status="up"
+      <number-info :sub-title="() => { return 'Visits this week' }" :total="12321" status="up"
         :sub-total="17.1"></number-info>
     </a-card>
   </div>
 </template>
 
 <script>
-  // @ is an alias to /src
+// @ is an alias to /src
 
-  import Trend from '@/components/Trend'
-  import AvatarList from '@/components/AvatarList'
-  import CountDown from '@/components/CountDown/CountDown'
-  import Ellipsis from '@/components/Ellipsis'
-  import NumberInfo from '@/components/NumberInfo'
+import Trend from '@/components/Trend'
+import AvatarList from '@/components/AvatarList'
+import CountDown from '@/components/CountDown/CountDown'
+import Ellipsis from '@/components/Ellipsis'
+import NumberInfo from '@/components/NumberInfo'
 
-  const AvatarListItem = AvatarList.AvatarItem
+const AvatarListItem = AvatarList.AvatarItem
 
-  export default {
-    name: 'Home',
-    components: {
-      NumberInfo,
-      Ellipsis,
-      CountDown,
-      Trend,
-      AvatarList,
-      AvatarListItem
+export default {
+  name: 'Home',
+  components: {
+    NumberInfo,
+    Ellipsis,
+    CountDown,
+    Trend,
+    AvatarList,
+    AvatarListItem
+  },
+  data() {
+    return {
+      targetTime: new Date().getTime() + 3900000
+    }
+  },
+  methods: {
+    onEndHandle() {
+      this.$message.success('CountDown callback!!!')
     },
-    data () {
-      return {
-        targetTime: new Date().getTime() + 3900000
-      }
-    },
-    methods: {
-      onEndHandle () {
-        this.$message.success('CountDown callback!!!')
-      },
-      onEndHandle2 () {
-        this.$notification.open({
-          message: 'Notification Title',
-          description: 'This is the content of the notification. This is the content of the notification. This is the content of the notification.',
-        });
-      }
+    onEndHandle2() {
+      this.$notification.open({
+        message: 'Notification Title',
+        description: 'This is the content of the notification. This is the content of the notification. This is the content of the notification.',
+      });
     }
   }
+}
 </script>
 
 <style scoped>
-  .home {
-    width: 900px;
-    margin: 0 auto;
-    padding: 25px 0;
-  }
-  .home > .banner {
-    text-align: center;
-    padding: 25px 0;
-    margin: 25px 0;
-  }
+.home {
+  width: 900px;
+  margin: 0 auto;
+  padding: 25px 0;
+}
+
+.home>.banner {
+  text-align: center;
+  padding: 25px 0;
+  margin: 25px 0;
+}
 </style>

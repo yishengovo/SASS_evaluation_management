@@ -77,6 +77,7 @@ declare module 'vue-router/auto/routes' {
     '/survey-template/360survey': RouteRecordInfo<'/survey-template/360survey', '/survey-template/360survey', Record<never, never>, Record<never, never>>,
     '/survey-template/evaluation': RouteRecordInfo<'/survey-template/evaluation', '/survey-template/evaluation', Record<never, never>, Record<never, never>>,
     '/survey-template/investigation': RouteRecordInfo<'/survey-template/investigation', '/survey-template/investigation', Record<never, never>, Record<never, never>>,
+    '/survey-template/mySurveyTemplate': RouteRecordInfo<'/survey-template/mySurveyTemplate', '/survey-template/mySurveyTemplate', Record<never, never>, Record<never, never>>,
     '/wizard-v1': RouteRecordInfo<'/wizard-v1', '/wizard-v1', Record<never, never>, Record<never, never>>,
     '/wizard-v1/': RouteRecordInfo<'/wizard-v1/', '/wizard-v1/', Record<never, never>, Record<never, never>>,
     '/wizard-v1/project-assessment': RouteRecordInfo<'/wizard-v1/project-assessment', '/wizard-v1/project-assessment', Record<never, never>, Record<never, never>>,

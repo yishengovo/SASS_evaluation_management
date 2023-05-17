@@ -2,7 +2,7 @@ export interface IGetTemplate {
   pageNum: number
   pageSize: number
   name?: string | undefined
-  type: '测评' | '调查' | '360度评估'
+  type: '测评' | '调查' | '360度评估' | '我的'
 }
 export interface Record {
   id: string
@@ -48,6 +48,7 @@ export interface Record {
   tenantId: string
   status?: any
   tenantIdList?: any
+  credit?: number
 }
 
 export interface ITemplateResult {

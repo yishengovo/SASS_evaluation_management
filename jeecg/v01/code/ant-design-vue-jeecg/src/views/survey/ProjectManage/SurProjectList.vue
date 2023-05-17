@@ -11,7 +11,6 @@
     <div class="table-page-search-wrapper">
       <a-form layout="inline" @keyup.enter.native="searchQuery">
         <a-row :gutter="24">
-
           <a-col :md="6" :sm="12">
             <a-form-item label="项目名称">
               <j-input placeholder="输入项目名称模糊查询" v-model="queryParam.projectName"></j-input>
@@ -33,11 +32,11 @@
             <a-form-item label="项目发布状态">
               <a-select v-model="queryParam.isPublish" placeholder="请选择项目发布状态">
                 <a-select-option value="">请选择</a-select-option>
-                <a-select-option value= true>已发布</a-select-option>
-                <a-select-option value= false>未发布</a-select-option>
+                <a-select-option value="true">已发布</a-select-option>
+                <a-select-option value="false">未发布</a-select-option>
               </a-select>
             </a-form-item>
-            </a-col>
+          </a-col>
 
           <!-- <template v-if="toggleSearchStatus">
             <a-col :md="6" :sm="8">
@@ -63,11 +62,10 @@
               <a-button type="primary" @click="searchReset" icon="reload" style="margin-left: 8px">重置</a-button>
               <a @click="handleToggleSearch" style="margin-left: 8px">
                 {{ toggleSearchStatus ? '收起' : '展开' }}
-                <a-icon :type="toggleSearchStatus ? 'up' : 'down'"/>
+                <a-icon :type="toggleSearchStatus ? 'up' : 'down'" />
               </a>
             </span>
           </a-col>
-
         </a-row>
       </a-form>
     </div>
@@ -235,9 +233,9 @@
             <a-tag v-if="record.isPublish == true" color="green">已发布</a-tag>
             <a-tag v-else color="red">未发布</a-tag>
           </template>
-        
+
           <template slot="leader" slot-scope="text, record">
-            {{record.name}}
+            {{ record.name }}
           </template>
           <template slot="htmlSlot" slot-scope="text">
             <div v-html="text"></div>
@@ -626,7 +624,7 @@ export default {
         collectList: '/survey/surProject/getAnalysis',
         changeProjectState: '/survey/surProject/publish',
         devQRCodeUrl: 'http://127.0.0.1:3000/survey/library/',
-        prodQRCodeUrl: 'http://hrtools.stalent.net:27000/survey/library/'
+        prodQRCodeUrl: 'http://hrtools.stalent.net:27521/survey/library/'
       },
       dictOptions: {},
       superFieldList: [],
@@ -649,7 +647,7 @@ export default {
       queryParam.pageNum = this.collectPagination.pageNum
       queryParam.pageSize = this.collectPagination.pageSize
       const { result: res } = await getProjectList(this.param)
-      this.dataSource=res.records
+      this.dataSource = res.records
       // this.ordersData = res.orders
       // this.paysData = res.pays
       // this.projectBarData = res.projectList

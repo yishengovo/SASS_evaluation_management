@@ -4,7 +4,7 @@
     v-if="!headerBarFixed"
     :class="[
       fixedHeader && 'ant-header-fixedHeader',
-      sidebarOpened ? 'ant-header-side-opened' : 'ant-header-side-closed'
+      sidebarOpened ? 'ant-header-side-opened' : 'ant-header-side-closed',
     ]"
     :style="{ padding: '0', zIndex: '0' }"
   >
@@ -17,7 +17,7 @@
       ></a-icon>
       <a-icon v-else class="trigger" :type="collapsed ? 'menu-unfold' : 'menu-fold'" @click="toggle" />
 
-      <span v-if="device === 'desktop'">欢迎使用 HRTools 人力资源百宝箱</span>
+      <span v-if="device === 'desktop'">欢迎使用 SURVEYPRO</span>
       <span v-else>Jeecg-Boot</span>
 
       <user-menu :theme="theme" />
@@ -49,34 +49,34 @@ export default {
   components: {
     UserMenu,
     SMenu,
-    Logo
+    Logo,
   },
   mixins: [mixin],
   props: {
     mode: {
       type: String,
       // sidemenu, topmenu
-      default: 'sidemenu'
+      default: 'sidemenu',
     },
     menus: {
       type: Array,
-      required: true
+      required: true,
     },
     theme: {
       type: String,
       required: false,
-      default: 'dark'
+      default: 'dark',
     },
     collapsed: {
       type: Boolean,
       required: false,
-      default: false
+      default: false,
     },
     device: {
       type: String,
       required: false,
-      default: 'desktop'
-    }
+      default: 'desktop',
+    },
   },
   data() {
     return {
@@ -86,9 +86,9 @@ export default {
         headerIndexLeft: {},
         topNavHeader: {},
         headerIndexRight: {},
-        topSmenuStyle: {}
+        topSmenuStyle: {},
       },
-      chatStatus: ''
+      chatStatus: '',
     }
   },
   watch: {
@@ -103,7 +103,7 @@ export default {
       if (newVal === 'topmenu') {
         this.buildTopMenuStyle()
       }
-    }
+    },
   },
   //update-end--author:sunjianlei---date:20190508------for: 顶部导航栏过长时显示更多按钮-----
   mounted() {
@@ -153,9 +153,9 @@ export default {
     // update-begin-author:sunjianlei date:20210508 for: 修复动态功能测试菜单、带参数菜单标题错误、展开错误的问题
     handleUpdateMenuTitle(value) {
       this.$emit('updateMenuTitle', value)
-    }
+    },
     // update-end-author:sunjianlei date:20210508 for: 修复动态功能测试菜单、带参数菜单标题错误、展开错误的问题
-  }
+  },
 }
 </script>
 
@@ -212,3 +212,4 @@ export default {
 
 /* update_end author:scott date:20190220 for: 缩小首页布局顶部的高度*/
 </style>
+

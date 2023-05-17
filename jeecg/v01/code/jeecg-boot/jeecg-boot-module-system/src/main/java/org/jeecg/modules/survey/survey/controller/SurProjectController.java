@@ -9,14 +9,20 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.util.*;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.aspect.annotation.AutoLog;
 import org.jeecg.common.system.base.controller.JeecgController;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.modules.survey.client.req.ProjectAdvancedQueryReq;
+import org.jeecg.modules.survey.client.service.ISurTagService;
 import org.jeecg.modules.survey.survey.dto.CollectDto;
 import org.jeecg.modules.survey.survey.dto.DashBordDto;
+import org.jeecg.modules.survey.survey.dto.DataScreenDto;
 import org.jeecg.modules.survey.survey.dto.ProjectResultDto;
 import org.jeecg.modules.survey.survey.entity.*;
 import org.jeecg.modules.survey.survey.req.*;
@@ -25,11 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @Description: 问卷项目表 @Author: jeecg-boot @Date: 2022-07-01 @Version: V1.0
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
 public class SurProjectController extends JeecgController<SurProject, ISurProjectService> {
   @Autowired private ISurProjectService surProjectService;
   @Autowired private ISurveyService surveyService;
+  @Autowired private ISurTagService tagService;
   @Autowired private ISurUserService userService;
   @Autowired private SurProjectSurveyService projectSurveyService;
   @Autowired private SurProjectUserService projectUserService;
@@ -578,5 +580,74 @@ public class SurProjectController extends JeecgController<SurProject, ISurProjec
   @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
   public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
     return super.importExcel(request, response, SurProject.class);
+  }
+
+  @AutoLog(value = "数据大屏 问卷个数")
+  @ApiOperation(value = "数据大屏 问卷个数", notes = "数据大屏 问卷个数")
+  @GetMapping(value = "/dashBord/survey")
+  public JSONObject dataScreenSurvey() {
+    DataScreenDto result = new DataScreenDto();
+    long count = surProjectService.getDataScreenSurveyCount();
+    result.setValue(String.valueOf(count));
+    JSONObject res = new JSONObject();
+    res.put("data", result);
+    return res;
+  }
+
+  @AutoLog(value = "数据大屏 标签个数")
+  @ApiOperation(value = "数据大屏 标签个数", notes = "数据大屏 标签个数")
+  @GetMapping(value = "/dashBord/tag")
+  public JSONObject dataScreenTag() {
+    DataScreenDto result = new DataScreenDto();
+    long count = surProjectService.getDataScreenTagCount();
+    result.setValue(String.valueOf(count));
+    JSONObject res = new JSONObject();
+    res.put("data", result);
+    return res;
+  }
+
+  @AutoLog(value = "数据大屏 项目个数")
+  @ApiOperation(value = "数据大屏 项目个数", notes = "数据大屏 项目个数")
+  @GetMapping(value = "/dashBord/project")
+  public JSONObject dataScreenProject() {
+    DataScreenDto result = new DataScreenDto();
+    long count = surProjectService.count();
+    result.setValue(String.valueOf(count));
+    JSONObject res = new JSONObject();
+    res.put("data", result);
+    return res;
+  }
+
+  @AutoLog(value = "数据大屏 总数")
+  @ApiOperation(value = "数据大屏 总数", notes = "数据大屏 总数")
+  @GetMapping(value = "/dashBord/count")
+  public JSONObject dataScreenCount() {
+    DataScreenDto result = new DataScreenDto();
+    long count = surProjectService.getDataScreenCount();
+    result.setValue(String.valueOf(count));
+    JSONObject res = new JSONObject();
+    res.put("data", result);
+    return res;
+  }
+
+  @AutoLog(value = "数据大屏 项目分布占比")
+  @ApiOperation(value = "数据大屏 项目分布占比", notes = "数据大屏 项目分布占比")
+  @GetMapping(value = "/dashBord/projectDistribution")
+  public JSONObject dataScreenProjectDistribution() {
+    return surProjectService.getProjectDistribution();
+  }
+
+  @AutoLog(value = "数据大屏 标签占比")
+  @ApiOperation(value = "数据大屏 标签占比", notes = "数据大屏 标签占比")
+  @GetMapping(value = "/dashBord/tagDistribution")
+  public JSONObject dataScreenTagDistribution() {
+    return surProjectService.getTagDistribution();
+  }
+
+  @AutoLog(value = "数据大屏 项目发布")
+  @ApiOperation(value = "数据大屏 项目发布", notes = "数据大屏 项目发布")
+  @GetMapping(value = "/dashBord/projectRelease")
+  public JSONObject dataScreenProjectRelease() {
+    return surProjectService.getProjectRelease();
   }
 }

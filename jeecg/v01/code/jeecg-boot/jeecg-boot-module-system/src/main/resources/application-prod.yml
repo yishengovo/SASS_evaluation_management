@@ -1,5 +1,5 @@
 server:
-  port: 27002
+  port: 27008
   tomcat:
     max-swallow-size: -1
   error:
@@ -141,7 +141,7 @@ spring:
       datasource:
         master:
           #          url: jdbc:mysql://112.48.26.62:27336/jeecg-boot?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
-          url: jdbc:mysql://localhost:27336/hr_2.0?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+          url: jdbc:mysql://localhost:27336/hr_computer_competition?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           username: root
           password: haishituling
           driver-class-name: com.mysql.cj.jdbc.Driver

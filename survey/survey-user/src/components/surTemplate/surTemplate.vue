@@ -6,11 +6,11 @@
  * @Description: file content
 -->
 <script lang="ts" setup>
-import { getTemplateApi } from '/@src/api/surTemplate/surTemplate'
+import { getTemplateApi, buyTemplateApi } from '/@src/api/surTemplate/surTemplate'
 import { Record } from '/@src/api/surTemplate/type'
 import { Notice } from '/@src/components/base/au-notice/Notice'
 type propsType = {
-  type: '测评' | '调查' | '360度评估'
+  type: '测评' | '调查' | '360度评估' | '我的'
 }
 const props = withDefaults(defineProps<propsType>(), {
   type: '测评',
@@ -50,6 +50,9 @@ const getTemplate = async (searchName = '') => {
 const searchTemplate = async () => {
   await getTemplate(searchName.value)
 }
+const buyTemplate = async (id: string) => {
+  await buyTemplateApi(id)
+}
 const surveyJson = ref('')
 const priviewSurTemplate = (jsonPreview: string) => {
   showSurveyPreview.value = true
@@ -86,8 +89,14 @@ onMounted(async () => {
           <div class="bottom">
             <div class="name">{{ item.surName }}</div>
             <div class="pay">
-              <div class="integral">29积分</div>
-              <div class="buy">购买</div>
+                <template v-if="type === '我的'">
+                  <div class="integral"></div>
+                  <div class="edit">编辑</div>
+                </template>
+                <template v-else>
+                  <div class="integral">{{ item.credit }} 积分</div>
+                  <div class="buy" @click="buyTemplate(item.id)">购买</div>
+                </template>
             </div>
           </div>
         </div>

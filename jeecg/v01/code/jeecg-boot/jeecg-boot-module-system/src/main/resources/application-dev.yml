@@ -145,7 +145,7 @@ spring:
           #          url: jdbc:mysql://150.158.98.218:3306/jeecg-boot?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           #          password: Lixiang1230.0
           #          朗新数据库
-          url: jdbc:mysql://112.48.26.62:27336/hr_2.0?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+          url: jdbc:mysql://112.48.26.62:27336/hr_computer_competition?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           username: root
           password: haishituling
 

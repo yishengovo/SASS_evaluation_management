@@ -9,7 +9,9 @@
     @cancel="handleCancel"
     cancelText="关闭"
   >
-    <survey-form ref="realForm" @ok="submitCallback" :disabled="disableSubmit"></survey-form>
+    <survey-form ref="realForm" @ok="submitCallback" :disabled="disableSubmit">
+      
+    </survey-form>
   </j-modal>
 </template>
 
@@ -18,14 +20,14 @@ import SurveyForm from './SurveyForm'
 export default {
   name: 'SurveyModal',
   components: {
-    SurveyForm
+    SurveyForm,
   },
   data() {
     return {
       title: '',
       width: 800,
       visible: false,
-      disableSubmit: false
+      disableSubmit: false,
     }
   },
   methods: {
@@ -54,7 +56,7 @@ export default {
     },
     handleCancel() {
       this.close()
-    }
-  }
+    },
+  },
 }
 </script>
