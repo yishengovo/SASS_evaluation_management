@@ -36,7 +36,9 @@ import org.jeecg.modules.survey.survey.req.ScoreSetReq;
 import org.jeecg.modules.survey.survey.service.ISurProjectService;
 import org.jeecg.modules.survey.survey.utils.ListUtils;
 import org.jeecg.modules.survey.survey.utils.NumUtils;
+import org.jeecg.modules.system.entity.SysTenant;
 import org.jeecg.modules.system.entity.SysUser;
+import org.jeecg.modules.system.mapper.SysTenantMapper;
 import org.jeecg.modules.system.service.ISysUserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Description: 用户端项目表 @Author: jeecg-boot @Date: 2022-09-26 @Version: V1.0
@@ -66,6 +69,8 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
   @Autowired private ISurProjectService projectService;
   @Autowired private ISysUserService sysUserService;
   @Autowired private SurveyMapper surveyMapper;
+  @Autowired private SysTenantMapper sysTenantMapper;
+
   @Autowired private SurProjectSurveyMapper projectSurveyMapper;
   @Autowired private SurQuestionMapper surQuestionMapper;
   @Autowired private SurQuestionChoiceMapper surQuestionChoiceMapper;
@@ -2504,6 +2509,143 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     surveyPageResp.setRecords(collect);
     surveyPageResp.setTotal(surveyList.size());
     return surveyPageResp;
+  }
+  @Override
+  public PageResp<Survey> getExclusiveSurveyTemplateList(ProjectAdvancedQueryReq req, String tenantId) {
+    // 专属该租户的问卷
+    List<Survey> exclusive = new ArrayList<>();
+    // 查询问卷租户关系
+    List<SurSurveyTenant> surSurveyTenantList =
+            surSurveyTenantMapper.selectList(
+                    new LambdaQueryWrapper<SurSurveyTenant>().eq(SurSurveyTenant::getTenantId, tenantId));
+    // 遍历问卷租户关系
+    if (req.getType().equals("我的") && !StringUtils.isEmpty(req.getType())) {
+      surSurveyTenantList.forEach(
+              surSurveyTenant -> {
+                Survey select =
+                        surveyMapper.selectOne(
+                                new LambdaQueryWrapper<Survey>()
+                                        .eq(Survey::getId, surSurveyTenant.getSurveyId()));
+                exclusive.add(select);
+              });
+    } else {
+      surSurveyTenantList.forEach(
+              surSurveyTenant -> {
+                Survey select =
+                        surveyMapper.selectOne(
+                                new LambdaQueryWrapper<Survey>()
+                                        .eq(Survey::getId, surSurveyTenant.getSurveyId())
+                                        .eq(Survey::getType, req.getType()));
+                exclusive.add(select);
+              });
+    }
+    // 过滤掉exclusive里面的null
+    List<Survey> exclusiveList =
+            exclusive.stream().filter(Objects::nonNull).collect(Collectors.toList());
+    // 对exclusiveList进行分页
+    List<Survey> collect =
+            exclusiveList.stream()
+                    .skip((req.getPageNum() - 1) * req.getPageSize())
+                    .limit(req.getPageSize())
+                    .collect(Collectors.toList());
+    PageResp<Survey> surveyPageResp = new PageResp<>();
+    surveyPageResp.setRecords(collect);
+    surveyPageResp.setTotal(exclusiveList.size());
+    return surveyPageResp;
+  }
+
+  @Override
+  public Boolean getTenantAndSurveyRelation(PurchaseReq req, String tenantId) {
+    SurSurveyTenant surSurveyTenant = surSurveyTenantMapper.selectOne(
+            new LambdaQueryWrapper<SurSurveyTenant>()
+                    .eq(SurSurveyTenant::getTenantId, tenantId)
+                    .eq(SurSurveyTenant::getSurveyId, req.getSurveyId()));
+    return surSurveyTenant==null;
+  }
+
+  @Override
+  public Boolean purchaseByPoint(PurchaseReq req, String tenantId) {
+    // 取得用户对象
+    SysTenant tenant = sysTenantMapper.selectById(tenantId);
+    // 取得问卷模板对象
+    Survey survey = surveyMapper.selectById(req.getSurveyId());
+    // 取得问卷问题
+    List<SurQuestion> surQuestions = surQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestion>()
+            .eq(SurQuestion::getSurveyUid, req.getSurveyId()));
+
+    // 取得问题选项
+    List<SurQuestionChoice> surQuestionChoices = surQuestionChoiceMapper.selectList(new LambdaQueryWrapper<SurQuestionChoice>()
+            .eq(SurQuestionChoice::getSurveyUid, req.getSurveyId()));
+
+    // 问卷模板复制到用户问卷模板
+    SurSurveyProject surSurveyProject = new SurSurveyProject();
+    surSurveyProject.setType(survey.getType())
+            .setSurName(survey.getSurName())
+            .setSurContent(survey.getSurContent())
+            .setJsonPreview(survey.getJsonPreview())
+            .setSysOrgCode(survey.getOrgUid())
+            .setTenantId(tenantId);
+    userSurveyMapper.insert(surSurveyProject);
+
+    // 问卷问题复制到用户问卷问题
+    List<SurSurveyProject> recentSurSurveyProjects = userSurveyMapper.selectList(new LambdaQueryWrapper<SurSurveyProject>()
+            .eq(SurSurveyProject::getTenantId,tenantId));
+    Iterator<SurSurveyProject> iter = recentSurSurveyProjects.iterator();
+    SurSurveyProject recentSurSurveyProject =new SurSurveyProject();
+    while(iter.hasNext()){
+      recentSurSurveyProject = iter.next();
+    }
+
+    for (SurQuestion surQuestion : surQuestions) {
+      SurQuestionProject surQuestionProject = new SurQuestionProject();
+      surQuestionProject.setSurveyUid(recentSurSurveyProject.getId())
+              .setContent(surQuestion.getContent())
+              .setIsParent(surQuestion.getIsParent())
+              .setParentId(surQuestion.getParentId())
+              .setParentContent(surQuestion.getParentContent())
+              .setSysOrgCode(surQuestion.getOrgUid())
+              .setTitle(surQuestion.getTitle())
+              .setTypeId(surQuestion.getTypeId())
+              .setDimensionId(surQuestion.getDimensionId())
+              .setRequired(surQuestion.getRequired())
+              .setTenantId(recentSurSurveyProject.getTenantId());
+      userSurveyQuestionMapper.insert(surQuestionProject);
+    }
+
+    // 问题选项复制到用户问题选项
+    List<SurQuestionProject> recentSurQuestionProjects = userSurveyQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestionProject>()
+            .eq(SurQuestionProject::getSurveyUid,recentSurSurveyProject.getId()));
+    String [] questionIds = new String[1000];
+    int index = 0;
+    for (SurQuestionProject recentSurQuestionProject: recentSurQuestionProjects) {
+      questionIds[index]=recentSurQuestionProject.getId();
+      index = index+1;
+    }
+
+    int i =0;
+    for (SurQuestionChoice surQuestionChoice:surQuestionChoices) {
+      SurQuestionChoiceProject surQuestionChoiceProject = new SurQuestionChoiceProject();
+      surQuestionChoiceProject.setSurveyUid(recentSurSurveyProject.getId())
+              .setContent(surQuestionChoice.getContent())
+              .setBasicScore(surQuestionChoice.getBasicScore())
+              .setRequired(surQuestionChoice.getRequired())
+              .setSysOrgCode(surQuestionChoice.getOrgUid())
+              .setTenantId(recentSurSurveyProject.getTenantId())
+              .setQuestionId(questionIds[i]);
+      userSurveyChoiceMapper.insert(surQuestionChoiceProject);
+      i=i+1;
+    }
+
+    // 添加租户和问卷关系
+    SurSurveyTenant surSurveyTenant = new SurSurveyTenant()
+            .setTenantId(Integer.valueOf(tenantId))
+            .setSurveyId(req.getSurveyId());
+    surSurveyTenantMapper.insert(surSurveyTenant);
+
+    // 用户扣除积分
+    tenant.setIntegral(tenant.getIntegral()-survey.getCredit());
+    sysTenantMapper.update(tenant,new LambdaQueryWrapper<>());
+    return true;
   }
 
   @Override

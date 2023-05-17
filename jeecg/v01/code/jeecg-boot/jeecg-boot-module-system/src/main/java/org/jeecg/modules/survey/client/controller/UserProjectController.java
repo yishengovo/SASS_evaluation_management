@@ -238,6 +238,47 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
     return Result.ok(page);
   }
 
+  @ApiOperation(value = "查询租户自己的问卷模板", notes = "查询租户自己的问卷模板")
+  @PostMapping(value = "/getExclusiveSurveyTemplate")
+  public Result<?> getExclusiveSurveyTemplateList(@RequestBody ProjectAdvancedQueryReq req) {
+    // 获取请求头
+    ServletRequestAttributes requestAttributes =
+            (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    HttpServletRequest request = requestAttributes.getRequest();
+    String tenantId = request.getHeader("tenant-id");
+    PageResp<Survey> page = userProjectService.getExclusiveSurveyTemplateList(req, tenantId);
+    return Result.ok(page);
+  }
+
+  @ApiOperation(value = "通过积分购买问卷模板", notes = "通过积分购买问卷模板")
+  @PostMapping(value = "/purchaseByPoint")
+  public Result<?> purchaseByPoint(@RequestBody PurchaseReq req){
+    // 获取请求头
+    ServletRequestAttributes requestAttributes =
+            (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+    HttpServletRequest request = requestAttributes.getRequest();
+    String tenantId = request.getHeader("tenant-id");
+
+    // 先判断用户是否已经购买过问卷模板
+    if (!userProjectService.getTenantAndSurveyRelation(req,tenantId)){
+      return Result.error("已经购买，不可重复购买！");
+    }
+    // 购买问卷模板
+    if (userProjectService.purchaseByPoint(req, tenantId)){
+      return Result.ok("购买成功！");
+    }
+
+    return Result.error("购买失败！");
+
+  }
+
+
+
+
+
+
+
   @ApiOperation(value = "根据项目id查询问卷模板", notes = "根据项目id查询问卷模板")
   @GetMapping(value = "/getEvaluationSurvey/{id}")
   public Result<?> getSurveyTemplate(@PathVariable String id) {
