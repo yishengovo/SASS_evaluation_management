@@ -220,4 +220,7 @@ public class Survey implements Serializable {
     @TableField(typeHandler = CommonStringTypeHandler.class)
     private List<String> tagRowkeys;
 
+    @Excel(name = "问卷积分", width = 15)
+    @ApiModelProperty(value = "问卷积分")
+    private Integer credit;
 }

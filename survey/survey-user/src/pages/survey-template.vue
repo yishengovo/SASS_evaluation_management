@@ -59,6 +59,15 @@ const route = useRoute()
               <!-- <span class="badge">3</span> -->
             </RouterLink>
           </li>
+          <li>
+            <RouterLink to="/survey-template/mySurveyTemplate" class="single-link">
+              <span class="icon">
+                <i class="lnir lnir-pie-chart" aria-hidden="true"></i>
+              </span>
+              我的问卷模板
+              <!-- <span class="badge">3</span> -->
+            </RouterLink>
+          </li>
         </template>
       </Sideblock>
     </template>
