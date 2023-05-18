@@ -2479,26 +2479,6 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
       queryAllWrapper.like(Survey::getSurName, req.getName());
     }
     List<Survey> surveyList = surveyMapper.selectList(queryAllWrapper);
-    // 专属该租户的问卷
-    List<Survey> exclusive = new ArrayList<>();
-    // 查询问卷租户关系
-    List<SurSurveyTenant> surSurveyTenantList =
-        surSurveyTenantMapper.selectList(
-            new LambdaQueryWrapper<SurSurveyTenant>().eq(SurSurveyTenant::getTenantId, tenantId));
-    // 遍历问卷租户关系
-    surSurveyTenantList.forEach(
-        surSurveyTenant -> {
-          Survey select =
-              surveyMapper.selectOne(
-                  new LambdaQueryWrapper<Survey>()
-                      .eq(Survey::getId, surSurveyTenant.getSurveyId())
-                      .eq(Survey::getType, req.getType()));
-          exclusive.add(select);
-        });
-    // 过滤掉exclusive里面的null
-    List<Survey> exclusiveList =
-        exclusive.stream().filter(Objects::nonNull).collect(Collectors.toList());
-    surveyList.addAll(exclusiveList);
     // 对surveyList进行分页
     List<Survey> collect =
         surveyList.stream()
@@ -2574,8 +2554,6 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     if(tenant.getIntegral()<survey.getCredit()){
       return false;
     }
-
-
     // 取得问卷问题
     List<SurQuestion> surQuestions = surQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestion>()
             .eq(SurQuestion::getSurveyUid, req.getSurveyId()));

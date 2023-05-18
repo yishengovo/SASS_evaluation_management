@@ -271,17 +271,9 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
       if (userProjectService.purchaseByPoint(req, tenantId)) {
         return Result.ok("购买成功！");
       }
-
-
     return Result.error("购买失败！");
 
   }
-
-
-
-
-
-
 
   @ApiOperation(value = "根据项目id查询问卷模板", notes = "根据项目id查询问卷模板")
   @GetMapping(value = "/getEvaluationSurvey/{id}")
