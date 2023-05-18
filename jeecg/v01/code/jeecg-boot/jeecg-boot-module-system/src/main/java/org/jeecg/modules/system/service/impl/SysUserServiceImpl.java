@@ -592,6 +592,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		return userMapper.updateById(sysUser)>0;
 	}
 
+
+	// 扣除积分
+	public Boolean deductIntegral(SysUser user) {
+		return userMapper.updateById(user)>0;
+	}
+
 	@Override
 	public String getTenantNameByUserId(String userId) {
 		//通过id获取用户

@@ -39,6 +39,7 @@ import org.jeecg.modules.survey.survey.utils.NumUtils;
 import org.jeecg.modules.system.entity.SysTenant;
 import org.jeecg.modules.system.entity.SysUser;
 import org.jeecg.modules.system.mapper.SysTenantMapper;
+import org.jeecg.modules.system.mapper.SysUserMapper;
 import org.jeecg.modules.system.service.ISysUserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
   @Autowired private SurSurveyProjectMapper userSurveyMapper;
   @Autowired private SurQuestionProjectMapper userSurveyQuestionMapper;
   @Autowired private SurQuestionChoiceProjectMapper userSurveyChoiceMapper;
+  @Autowired private SysUserMapper sysUserMapper;
   @Autowired private SurUserMapper userMapper;
   @Autowired private SurUserResultMapper userResultMapper;
   @Autowired private SurResultMapper resultMapper;
@@ -2549,9 +2551,16 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     SysTenant tenant = sysTenantMapper.selectById(tenantId);
     // 取得问卷模板对象
     Survey survey = surveyMapper.selectById(req.getSurveyId());
+    // 取用户对象
+    String userName = sysUserService.getUserNameByTenantId(tenantId);
+    SysUser user = sysUserService.getUserByName(userName);
 
-    //判断用户积分是否足够
+    // 判断租户积分是否足够
     if(tenant.getIntegral()<survey.getCredit()){
+      return false;
+    }
+    // 判断用户积分是否足够
+    if (user.getIntegral()<survey.getCredit()){
       return false;
     }
     // 取得问卷问题
@@ -2627,9 +2636,12 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
             .setSurveyId(req.getSurveyId());
     surSurveyTenantMapper.insert(surSurveyTenant);
 
-    // 用户扣除积分
+    // 租户扣除积分
     tenant.setIntegral(tenant.getIntegral()-survey.getCredit());
     sysTenantMapper.update(tenant,new LambdaQueryWrapper<SysTenant>().eq(SysTenant::getId,tenantId));
+    // 用户扣除积分
+    user.setIntegral(user.getIntegral()-survey.getCredit());
+    sysUserService.deductIntegral(user);
     return true;
   }
 

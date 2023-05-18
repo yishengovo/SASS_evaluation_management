@@ -291,6 +291,8 @@ public interface ISysUserService extends IService<SysUser> {
 	//通过用户id充值积分
 	Boolean updateIntegral(String userId, Integer integral);
 
+	Boolean deductIntegral(SysUser user);
+
 	//通过用户Id返回租户公司名
 	String getTenantNameByUserId(String userId);
 
