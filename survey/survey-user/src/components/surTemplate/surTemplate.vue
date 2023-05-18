@@ -6,7 +6,7 @@
  * @Description: file content
 -->
 <script lang="ts" setup>
-import { getTemplateApi, buyTemplateApi } from '/@src/api/surTemplate/surTemplate'
+import { getTemplateApi, buyTemplateApi, editTemplateApi, PushTemplateApi } from '/@src/api/surTemplate/surTemplate'
 import { Record } from '/@src/api/surTemplate/type'
 import { Notice } from '/@src/components/base/au-notice/Notice'
 type propsType = {
@@ -30,6 +30,7 @@ const showSurveyPreview = ref(false)
 const isLoaderActive = ref(false)
 const searchName = ref('')
 const templateData = ref<Record[]>([])
+// 查询问卷模板
 const getTemplate = async (searchName = '') => {
   isLoaderActive.value = true
   const res = await getTemplateApi({
@@ -47,12 +48,37 @@ const getTemplate = async (searchName = '') => {
   }
   isLoaderActive.value = false
 }
+// 搜索问卷模板
 const searchTemplate = async () => {
   await getTemplate(searchName.value)
 }
+// 购买问卷模板
 const buyTemplate = async (id: string) => {
-  await buyTemplateApi(id)
+  isLoaderActive.value = true
+  const res = await buyTemplateApi({surveyId: id})
+  if (res.data.code === 500) {
+    isLoaderActive.value = false
+    return Notice({
+      notice_type: 'error',
+      message: '购买问卷失败！可能是积分不足或者网络问题！',
+    })
+  } else if (res.data.code === 200) {
+    isLoaderActive.value = false
+    return Notice({
+      notice_type: 'success',
+      message: '购买问卷成功！',
+    })
+  }
 }
+// 编辑我的问卷模板
+const editTemplate = async (id: string) => {
+
+} 
+// 上传我的问卷模板
+const pushTemplate = async (id: string) => {
+  
+}
+
 const surveyJson = ref('')
 const priviewSurTemplate = (jsonPreview: string) => {
   showSurveyPreview.value = true
@@ -90,8 +116,8 @@ onMounted(async () => {
             <div class="name">{{ item.surName }}</div>
             <div class="pay">
                 <template v-if="type === '我的'">
-                  <div class="integral"></div>
-                  <div class="edit">编辑</div>
+                  <div class="buy" @click="editTemplate(item.id)">编辑</div>
+                  <div class="buy" @click="oushTemplate(item.id)">上传</div>
                 </template>
                 <template v-else>
                   <div class="integral">{{ item.credit }} 积分</div>

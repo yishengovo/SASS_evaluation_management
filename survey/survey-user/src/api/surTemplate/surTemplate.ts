@@ -17,7 +17,9 @@ const api = useApi()
 enum surTemplateApi {
   GetTemplate = '/client/userProject/getSurveyTemplate',
   GetMyTemplate = '/client/userProject/getExclusiveSurveyTemplate',
-  BuyTemplate = '/client/userProject/purchaseByPoint'
+  BuyTemplate = '/client/userProject/purchaseByPoint',
+  EditTemplate = '/client/userProject/editMyTemplateById',
+  PushTemplate = '/client/userProject/pushMyTemplate'
 }
 
 export const getTemplateApi = (
@@ -30,7 +32,15 @@ export const getTemplateApi = (
   }
 }
 
-export const buyTemplateApi = (surveyId: string) => {
-  return api.post(surTemplateApi.BuyTemplate, surveyId)
+export const buyTemplateApi = (data: {}) => {
+  return api.post(surTemplateApi.BuyTemplate, data)
+}
+
+export const editTemplateApi = (surveyId: string) => {
+  return api.post(surTemplateApi.EditTemplate, surveyId)
+}
+
+export const PushTemplateApi = (surveyId: string) => {
+  return api.post(surTemplateApi.PushTemplate, surveyId)
 }
 
