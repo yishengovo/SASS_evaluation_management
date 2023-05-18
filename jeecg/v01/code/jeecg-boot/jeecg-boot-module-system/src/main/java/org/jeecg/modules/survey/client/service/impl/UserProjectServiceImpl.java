@@ -2569,6 +2569,13 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     SysTenant tenant = sysTenantMapper.selectById(tenantId);
     // 取得问卷模板对象
     Survey survey = surveyMapper.selectById(req.getSurveyId());
+
+    //判断用户积分是否足够
+    if(tenant.getIntegral()<survey.getCredit()){
+      return false;
+    }
+
+
     // 取得问卷问题
     List<SurQuestion> surQuestions = surQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestion>()
             .eq(SurQuestion::getSurveyUid, req.getSurveyId()));
@@ -2644,7 +2651,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
 
     // 用户扣除积分
     tenant.setIntegral(tenant.getIntegral()-survey.getCredit());
-    sysTenantMapper.update(tenant,new LambdaQueryWrapper<>());
+    sysTenantMapper.update(tenant,new LambdaQueryWrapper<SysTenant>().eq(SysTenant::getId,tenantId));
     return true;
   }
 

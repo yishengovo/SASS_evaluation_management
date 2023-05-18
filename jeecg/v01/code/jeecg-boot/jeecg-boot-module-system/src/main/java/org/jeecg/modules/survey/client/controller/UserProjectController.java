@@ -35,6 +35,8 @@ import org.jeecg.modules.survey.survey.dto.ChoiceDto;
 import org.jeecg.modules.survey.survey.dto.CollectDto;
 import org.jeecg.modules.survey.survey.dto.ProjectResultDto;
 import org.jeecg.modules.survey.survey.entity.*;
+import org.jeecg.modules.survey.survey.mapper.SurSurveyTenantMapper;
+import org.jeecg.modules.survey.survey.mapper.SurveyMapper;
 import org.jeecg.modules.survey.survey.req.ChoiceByQuestionIdReq;
 import org.jeecg.modules.survey.survey.req.CollectReq;
 import org.jeecg.modules.survey.survey.req.ScoreSetReq;
@@ -260,14 +262,16 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
     HttpServletRequest request = requestAttributes.getRequest();
     String tenantId = request.getHeader("tenant-id");
 
-    // 先判断用户是否已经购买过问卷模板
-    if (!userProjectService.getTenantAndSurveyRelation(req,tenantId)){
-      return Result.error("已经购买，不可重复购买！");
-    }
-    // 购买问卷模板
-    if (userProjectService.purchaseByPoint(req, tenantId)){
-      return Result.ok("购买成功！");
-    }
+
+      // 先判断用户是否已经购买过问卷模板
+      if (!userProjectService.getTenantAndSurveyRelation(req, tenantId)) {
+        return Result.error("已经购买，不可重复购买！");
+      }
+      // 购买问卷模板
+      if (userProjectService.purchaseByPoint(req, tenantId)) {
+        return Result.ok("购买成功！");
+      }
+
 
     return Result.error("购买失败！");
 
