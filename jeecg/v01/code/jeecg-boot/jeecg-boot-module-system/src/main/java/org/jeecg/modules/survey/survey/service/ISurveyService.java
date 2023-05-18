@@ -23,6 +23,4 @@ public interface ISurveyService extends IService<Survey> {
     Boolean saveJsonPreview(SaveJsonReq req);
    //根据问卷id查询问题和选项
     List<SurveyDto> getQuestionAndChoice(String id);
-    //根据问卷id查询积分
-    String getSurveyCredit(String id);
 }
