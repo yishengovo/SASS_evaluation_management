@@ -123,6 +123,11 @@ public interface IUserProjectService extends IService<UserProject> {
   // 通过积分购买问卷模板
   @Transactional(rollbackFor = Exception.class)
   Boolean purchaseByPoint(PurchaseReq req, String tenantId);
+
+  //上传问卷模板
+  @Transactional(rollbackFor = Exception.class)
+  Boolean uploadTemplate(UploadReq req,String tenantId);
+
   // 根据问卷模板id查询问卷模板
   Survey getSurveyTemplateById(String id);
   // 测评项目设置测评问卷
