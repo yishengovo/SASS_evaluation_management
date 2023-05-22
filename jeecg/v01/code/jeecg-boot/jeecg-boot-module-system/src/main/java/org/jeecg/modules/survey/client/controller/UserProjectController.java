@@ -35,6 +35,7 @@ import org.jeecg.modules.survey.survey.dto.ChoiceDto;
 import org.jeecg.modules.survey.survey.dto.CollectDto;
 import org.jeecg.modules.survey.survey.dto.ProjectResultDto;
 import org.jeecg.modules.survey.survey.entity.*;
+import org.jeecg.modules.survey.survey.mapper.SurSurveyProjectMapper;
 import org.jeecg.modules.survey.survey.mapper.SurSurveyTenantMapper;
 import org.jeecg.modules.survey.survey.mapper.SurveyMapper;
 import org.jeecg.modules.survey.survey.req.ChoiceByQuestionIdReq;
@@ -80,6 +81,7 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
   @Autowired private ReportModeOfThinkingMapper reportModeOfThinkingMapper;
   @Autowired private ReportTeamRoleMapper reportTeamRoleMapper;
   @Autowired private ReportSelfMotivationMapper reportSelfMotivationMapper;
+  @Autowired private SurSurveyProjectMapper userSurveyMapper;
 
   @ApiOperation(value = "导出答卷")
   @PostMapping("/exportAnswerSheet")
@@ -269,6 +271,23 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
         return Result.ok("购买成功！");
       }
     return Result.error("购买失败！");
+  }
+  @ApiOperation(value = "上传问卷模板到市场", notes = "上传问卷模板到市场")
+  @PostMapping(value = "/uploadTemplate")
+  public Result<?> uploadTemplate(@RequestBody UploadReq req) {
+    // 获取请求头
+    ServletRequestAttributes requestAttributes =
+            (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+    HttpServletRequest request = requestAttributes.getRequest();
+    String tenantId = request.getHeader("tenant-id");
+
+    if (userProjectService.uploadTemplate(req, tenantId)) {
+
+      return Result.ok("上传成功！");
+
+    }
+    return Result.error("上传失败！");
   }
 
   @ApiOperation(value = "根据项目id查询问卷模板", notes = "根据项目id查询问卷模板")

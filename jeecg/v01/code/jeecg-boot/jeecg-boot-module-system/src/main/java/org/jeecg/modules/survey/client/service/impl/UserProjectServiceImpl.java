@@ -2685,6 +2685,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     userSurveyMapper.insert(surSurveyProject);
 
     // 问卷问题复制到用户问卷问题
+    //获取问卷id（通过迭代器获取）
     List<SurSurveyProject> recentSurSurveyProjects = userSurveyMapper.selectList(new LambdaQueryWrapper<SurSurveyProject>()
             .eq(SurSurveyProject::getTenantId,tenantId));
     Iterator<SurSurveyProject> iter = recentSurSurveyProjects.iterator();
@@ -2746,6 +2747,102 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     user.setIntegral(user.getIntegral()-survey.getCredit());
     sysUserService.deductIntegral(user);
     return true;
+  }
+
+
+  @Override
+  public Boolean uploadTemplate(UploadReq req,String tenantId){
+  //获得需要上传问卷模板
+  SurSurveyProject surSurveyProject = userSurveyMapper.selectById(req.getSurveyProjectId());
+
+  // 取得用户对象
+  SysTenant tenant = sysTenantMapper.selectById(tenantId);
+
+  //用户问卷模板的上传所需的积分(也可以不写死，可以让前端传值过来)
+  if((tenant.getIntegral()-1)<0){
+    return false;
+  }
+
+  tenant.setIntegral((tenant.getIntegral()-1));
+  sysTenantMapper.update(tenant,new LambdaQueryWrapper<SysTenant>().eq(SysTenant::getId,tenantId));
+
+  //判断是否编辑过
+//  if(!surSurveyProject.getIsEdit()){
+//    return false;
+//  }
+
+  //将用户surveyProject自己的模板上传到市场
+    Survey survey = new Survey();
+    survey.setType(surSurveyProject.getType())
+            .setSurName(surSurveyProject.getSurName())
+            .setSurContent(surSurveyProject.getSurContent())
+            .setJsonPreview(surSurveyProject.getJsonPreview())
+            .setOrgUid(surSurveyProject.getSysOrgCode())
+            .setCredit(req.getCredit())
+            .setTenantId(tenantId);
+    surveyMapper.insert(survey);
+
+    // 取得用户问卷问题
+    List<SurQuestionProject> surQuestionProjects = userSurveyQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestionProject>()
+            .eq(SurQuestionProject::getSurveyUid, req.getSurveyProjectId()));
+
+    // 取得用户问题选项
+    List<SurQuestionChoiceProject> surQuestionChoiceProjects = userSurveyChoiceMapper.selectList(new LambdaQueryWrapper<SurQuestionChoiceProject>()
+            .eq(SurQuestionChoiceProject::getSurveyUid, req.getSurveyProjectId()));
+
+    // 用户问卷问题复制到问卷问题
+    //利用迭代器
+    List<Survey> recentSurSurveys = surveyMapper.selectList(new LambdaQueryWrapper<Survey>()
+            .eq(Survey::getTenantId,tenantId));
+    Iterator<Survey> iter = recentSurSurveys.iterator();
+    Survey recentSurSurvey =new Survey();
+    while(iter.hasNext()){
+      recentSurSurvey = iter.next();
+    }
+
+    for (SurQuestionProject surQuestionProject : surQuestionProjects) {
+      SurQuestion surQuestion = new SurQuestion();
+
+      surQuestion.setSurveyUid(recentSurSurvey.getId())
+              .setContent(surQuestionProject.getContent())
+              .setIsParent(surQuestionProject.getIsParent())
+              .setParentId(surQuestionProject.getParentId())
+              .setParentContent(surQuestionProject.getParentContent())
+              .setOrgUid(surQuestionProject.getSysOrgCode())
+              .setTitle(surQuestionProject.getTitle())
+              .setTypeId(surQuestionProject.getTypeId())
+              .setDimensionId(surQuestionProject.getDimensionId())
+              .setRequired(surQuestionProject.getRequired())
+              .setTenantId(recentSurSurvey.getTenantId());
+      surQuestionMapper.insert(surQuestion);
+    }
+
+    // 用户问题选项复制到问题选项
+    List<SurQuestion> recentSurQuestion = surQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestion>()
+            .eq(SurQuestion::getSurveyUid,recentSurSurvey.getId()));
+    String [] questionIds = new String[1000];
+    int index = 0;
+    for (SurQuestion recentSurQuestions: recentSurQuestion) {
+      questionIds[index]=recentSurQuestions.getId();
+      index = index+1;
+    }
+
+    int i =0;
+    for (SurQuestionChoiceProject surQuestionChoiceProject:surQuestionChoiceProjects) {
+      SurQuestionChoice surQuestionChoice = new SurQuestionChoice();
+      surQuestionChoice.setSurveyUid(recentSurSurvey.getId())
+              .setContent(surQuestionChoiceProject.getContent())
+              .setBasicScore(surQuestionChoiceProject.getBasicScore())
+              .setRequired(surQuestionChoiceProject.getRequired())
+              .setOrgUid(surQuestionChoiceProject.getSysOrgCode())
+              .setTenantId(recentSurSurvey.getTenantId())
+              .setQuestionId(questionIds[i]);
+      surQuestionChoiceMapper.insert(surQuestionChoice);
+      i=i+1;
+    }
+
+
+  return true;
   }
 
   @Override
