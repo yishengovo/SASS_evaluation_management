@@ -258,11 +258,8 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
     // 获取请求头
     ServletRequestAttributes requestAttributes =
             (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-
     HttpServletRequest request = requestAttributes.getRequest();
     String tenantId = request.getHeader("tenant-id");
-
-
       // 先判断用户是否已经购买过问卷模板
       if (!userProjectService.getTenantAndSurveyRelation(req, tenantId)) {
         return Result.error("已经购买，不可重复购买！");
@@ -272,7 +269,6 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
         return Result.ok("购买成功！");
       }
     return Result.error("购买失败！");
-
   }
 
   @ApiOperation(value = "根据项目id查询问卷模板", notes = "根据项目id查询问卷模板")
@@ -779,6 +775,20 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
       return Result.error(500, "创建失败");
     }
   }
+
+  @AutoLog(value = "问卷市场-保存")
+  @ApiOperation(value = "问卷市场-保存", notes = "问卷市场-保存")
+  @PostMapping(value = "/surveyMarketSave")
+  public Result<?> surveyMarketSave(@RequestBody SurveyMarketSaveReq req) {
+    SurSurveyProject surSurveyProject = userProjectService.surveyMarketSave(req);
+    if (surSurveyProject!=null) {
+      return Result.OK(surSurveyProject);
+    }else {
+      return Result.error(500, "保存失败");
+    }
+  }
+
+
 
   /**
    * 分页列表查询

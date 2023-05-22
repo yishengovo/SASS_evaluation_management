@@ -377,6 +377,109 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
   }
 
   @Override
+  public SurSurveyProject surveyMarketSave(SurveyMarketSaveReq req) {
+    SurSurveyProject survey =
+            userSurveyMapper.selectOne(
+                    new LambdaQueryWrapper<SurSurveyProject>()
+                            .eq(SurSurveyProject::getId, req.getSurveyId()));
+    survey.setSurName(req.getName());
+    survey.setType(req.getType());
+    survey.setSurContent(req.getContent());
+    survey.setJsonPreview(req.getJsonPreview());
+    userSurveyMapper.updateById(survey);
+
+    List<SurQuestionProject> questions =
+            userSurveyQuestionMapper.selectList(
+                    new LambdaQueryWrapper<SurQuestionProject>()
+                            .eq(SurQuestionProject::getSurveyUid, req.getSurveyId()));
+    List<String> questionIList =
+            questions.stream().map(SurQuestionProject::getId).distinct().collect(Collectors.toList());
+    if (!questionIList.isEmpty()) {
+      userSurveyQuestionMapper.deleteBatchIds(questionIList);
+    }
+    List<SurQuestionChoiceProject> questionChoices =
+            userSurveyChoiceMapper.selectList(
+                    new LambdaQueryWrapper<SurQuestionChoiceProject>()
+                            .eq(SurQuestionChoiceProject::getSurveyUid, req.getSurveyId()));
+    List<String> questionChoiceList =
+            questionChoices.stream()
+                    .map(SurQuestionChoiceProject::getId)
+                    .distinct()
+                    .collect(Collectors.toList());
+    if (!questionChoiceList.isEmpty()) {
+      userSurveyChoiceMapper.deleteBatchIds(questionChoiceList);
+    }
+    // 将参数中的问题保存到 question和choices表中
+    List<SurveyQuestionReq> questionList = req.getQuestion();
+    SurQuestionProject surQuestion;
+    for (SurveyQuestionReq question : questionList) {
+      // 判断是单个问题还是矩阵里的问题
+      // 如果是单个问题
+      if (StringUtils.isNotBlank(question.getName()) && question.getNames().isEmpty()) {
+        List<Integer> score = new ArrayList<>();
+        surQuestion = new SurQuestionProject();
+        List<String> choices = question.getChoices();
+        // 将问题插入到question表中
+        surQuestion.setSurveyUid(survey.getId());
+        surQuestion.setContent(question.getName());
+        surQuestion.setIsParent(false);
+        surQuestion.setTitle(question.getTitle());
+        surQuestion.setTypeId(question.getType());
+        userSurveyQuestionMapper.insert(surQuestion);
+        // 遍历choices 将每个答案存到数据库中
+        SurQuestionChoiceProject surQuestionChoice = new SurQuestionChoiceProject();
+        surQuestionChoice.setQuestionId(surQuestion.getId());
+        surQuestionChoice.setSurveyUid(survey.getId());
+        String choiceListJson = JSONObject.toJSONString(choices);
+        surQuestionChoice.setContent(choiceListJson);
+        for (int i = 0; i < choices.size(); i++) {
+          score.add(0);
+        }
+        surQuestionChoice.setBasicScore(score.toString());
+        userSurveyChoiceMapper.insert(surQuestionChoice);
+      }
+      // 如果是矩阵问题
+      if (!question.getNames().isEmpty()) {
+        List<String> names = question.getNames();
+        // 父问题
+        SurQuestionProject parentQuestion = new SurQuestionProject();
+        parentQuestion.setSurveyUid(survey.getId());
+        parentQuestion.setIsParent(true);
+        parentQuestion.setContent(question.getName());
+        parentQuestion.setTitle(question.getTitle());
+        parentQuestion.setTypeId(question.getType());
+        userSurveyQuestionMapper.insert(parentQuestion);
+        for (String name : names) {
+          List<Integer> score = new ArrayList<>();
+          surQuestion = new SurQuestionProject();
+          List<String> choices = question.getChoices();
+          // 将问题插入到question表中
+          surQuestion.setSurveyUid(survey.getId());
+          surQuestion.setContent(name);
+          surQuestion.setTitle(question.getTitle());
+          surQuestion.setTypeId(question.getType());
+          surQuestion.setIsParent(false);
+          surQuestion.setParentId(parentQuestion.getId());
+          surQuestion.setParentContent(parentQuestion.getContent());
+          userSurveyQuestionMapper.insert(surQuestion);
+          // 遍历choices 将每个答案存到数据库中
+          SurQuestionChoiceProject surQuestionChoice = new SurQuestionChoiceProject();
+          surQuestionChoice.setQuestionId(surQuestion.getId());
+          surQuestionChoice.setSurveyUid(survey.getId());
+          String choiceListJson = JSONObject.toJSONString(choices);
+          surQuestionChoice.setContent(choiceListJson);
+          for (int i = 0; i < choices.size(); i++) {
+            score.add(0);
+          }
+          surQuestionChoice.setBasicScore(score.toString());
+          userSurveyChoiceMapper.insert(surQuestionChoice);
+        }
+      }
+    }
+    return survey;
+  }
+
+  @Override
   public Page<SurProject> getProjectList(ProjectAdvancedQueryReq req) {
     // 条件高级查询
     LambdaQueryWrapper<SurProject> queryWrapper = new LambdaQueryWrapper<>();
