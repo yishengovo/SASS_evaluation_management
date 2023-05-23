@@ -2687,15 +2687,9 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     List<SurQuestionChoiceProject> surQuestionChoiceProjects = userSurveyChoiceMapper.selectList(new LambdaQueryWrapper<SurQuestionChoiceProject>()
             .eq(SurQuestionChoiceProject::getSurveyUid, req.getSurveyProjectId()));
 
-    // 用户问卷问题复制到问卷问题
-    //利用迭代器
-    List<Survey> recentSurSurveys = surveyMapper.selectList(new LambdaQueryWrapper<Survey>()
-            .eq(Survey::getTenantId,tenantId));
-    Iterator<Survey> iter = recentSurSurveys.iterator();
-    Survey recentSurSurvey =new Survey();
-    while(iter.hasNext()){
-      recentSurSurvey = iter.next();
-    }
+    //mybatisPlus自带的雪花算法，直接获取刚插入的id值
+    //获取市场模板上的一条数据
+    Survey recentSurSurvey = surveyMapper.selectById(survey.getId());
 
     for (SurQuestionProject surQuestionProject : surQuestionProjects) {
       SurQuestion surQuestion = new SurQuestion();
