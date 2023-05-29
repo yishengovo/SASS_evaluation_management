@@ -86,9 +86,6 @@ public class SurSurveyProject implements Serializable {
   @ApiModelProperty(value = "所属租户id")
   private String tenantId;
 
-  /** 是否编辑过该租户 1为已经编辑 0为未编辑过 */
-  @Excel(name = "是否编辑过该租户 1为已经编辑 0为未编辑过", width = 15)
-  @ApiModelProperty(value = "是否编辑过该租户")
-  private Boolean isEdit;
+
 
 }

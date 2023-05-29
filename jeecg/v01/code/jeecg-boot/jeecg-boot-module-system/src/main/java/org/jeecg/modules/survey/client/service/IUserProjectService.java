@@ -33,6 +33,8 @@ public interface IUserProjectService extends IService<UserProject> {
   // 创建项目
   @Transactional(rollbackFor = Exception.class)
   SurProject createProject(CreateProjectReq req);
+  @Transactional(rollbackFor = Exception.class)
+  SurSurveyProject surveyMarketSave(SurveyMarketSaveReq req);
   // 根据租户返回项目列表
   Page<SurProject> getProjectList(ProjectAdvancedQueryReq req);
   // 根据项目id返回题目列表
