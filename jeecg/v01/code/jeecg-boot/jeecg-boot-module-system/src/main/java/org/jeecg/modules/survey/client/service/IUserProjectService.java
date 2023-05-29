@@ -28,6 +28,8 @@ public interface IUserProjectService extends IService<UserProject> {
 
   // 根据项目id查询项目信息
   Object queryProjectInfo(String projectId);
+  //根据问卷id查询问卷信息
+  Object querySurveyProject(String surveyId);
   // 创建项目
   @Transactional(rollbackFor = Exception.class)
   SurProject createProject(CreateProjectReq req);

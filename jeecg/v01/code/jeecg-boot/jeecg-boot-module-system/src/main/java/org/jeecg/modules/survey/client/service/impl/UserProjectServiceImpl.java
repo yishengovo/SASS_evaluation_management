@@ -34,6 +34,7 @@ import org.jeecg.modules.survey.survey.req.ChoiceByQuestionIdReq;
 import org.jeecg.modules.survey.survey.req.CollectReq;
 import org.jeecg.modules.survey.survey.req.ScoreSetReq;
 import org.jeecg.modules.survey.survey.service.ISurProjectService;
+import org.jeecg.modules.survey.survey.service.ISurSurveyProjectService;
 import org.jeecg.modules.survey.survey.utils.ListUtils;
 import org.jeecg.modules.survey.survey.utils.NumUtils;
 import org.jeecg.modules.system.entity.SysTenant;
@@ -72,6 +73,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
   @Autowired private ISysUserService sysUserService;
   @Autowired private SurveyMapper surveyMapper;
   @Autowired private SysTenantMapper sysTenantMapper;
+  @Autowired private ISurSurveyProjectService surSurveyProjectService;
 
   @Autowired private SurProjectSurveyMapper projectSurveyMapper;
   @Autowired private SurQuestionMapper surQuestionMapper;
@@ -126,6 +128,25 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
       return projectDto;
     }
   }
+
+  @Override
+  public Object querySurveyProject(String surveyId) {
+    SurSurveyProject userProject = surSurveyProjectService.getById(surveyId);
+    if (userProject == null) {
+      return null;
+    }
+    // 获取url
+    String url = (String) redisUtil.get("oss:excel");
+    SurveyProjectDto surveyProjectDto = new SurveyProjectDto();
+    SurSurveyProject survey =
+            userSurveyMapper.selectOne(
+                    new LambdaQueryWrapper<SurSurveyProject>()
+                            .eq(SurSurveyProject::getId,surveyId));
+    surveyProjectDto.setSurvey(survey);
+    surveyProjectDto.setUrl(url);
+      return surveyProjectDto;
+  }
+
 
   @Override
   public SurProject createProject(CreateProjectReq req) {

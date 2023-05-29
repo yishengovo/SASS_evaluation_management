@@ -904,6 +904,22 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
   }
 
   /**
+   * 通过id查询
+   *
+   * @param id
+   * @return
+   */
+  // @AutoLog(value = "用户端项目表-通过id查询")
+  @ApiOperation(value = "用户端项目表-通过id查询", notes = "用户端项目表-通过id查询")
+  @GetMapping(value = "/userProjectQueryById")
+  public Result<?> userProjectQueryById(@RequestParam(name = "id", required = true) String id) {
+    Object userProjectInfo = userProjectService.querySurveyProject(id);
+    System.out.println(userProjectInfo);
+    return Result.OK(userProjectInfo);
+  }
+
+
+  /**
    * 导出excel
    *
    * @param request
