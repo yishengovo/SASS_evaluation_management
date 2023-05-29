@@ -300,23 +300,6 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
       surProjectSurvey.setProjectId(project.getId());
       surProjectSurvey.setSurveyId(survey.getId());
       projectSurveyMapper.insert(surProjectSurvey);
-      // 如果有问题的话 先删除原来的问题 再去保存新的问题
-      //            List<UserSurveyQuestion> questions = userSurveyQuestionMapper.selectList(new
-      // LambdaQueryWrapper<UserSurveyQuestion>().eq(UserSurveyQuestion::getSurveyUid,
-      // req.getSurveyId()));
-      //            List<String> questionIList =
-      // questions.stream().map(UserSurveyQuestion::getId).distinct().collect(Collectors.toList());
-      //            if (!questionIList.isEmpty()) {
-      //                userSurveyQuestionMapper.deleteBatchIds(questionIList);
-      //            }
-      //            List<UserSurveyChoice> questionChoices = userSurveyChoiceMapper.selectList(new
-      // LambdaQueryWrapper<UserSurveyChoice>().eq(UserSurveyChoice::getSurveyUid,
-      // req.getSurveyId()));
-      //            List<String> questionChoiceList =
-      // questionChoices.stream().map(UserSurveyChoice::getId).distinct().collect(Collectors.toList());
-      //            if (!questionChoiceList.isEmpty()) {
-      //                userSurveyChoiceMapper.deleteBatchIds(questionChoiceList);
-      //            }
       // 将参数中的问题保存到 question和choices表中
       List<SurveyQuestionReq> questionList = req.getQuestion();
       SurQuestionProject surQuestion;
@@ -401,9 +384,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
                             .eq(SurSurveyProject::getId, req.getSurveyId()));
 
     // 判断是否拿到问卷
-    if (survey==null) {
-      return null;
-    }
+    if (survey==null) return null;
 
     // 不为null,则执行更新
     survey.setSurName(req.getName())
@@ -2684,10 +2665,14 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     SysTenant tenant = sysTenantMapper.selectById(tenantId);
     // 取得问卷模板对象
     Survey survey = surveyMapper.selectById(req.getSurveyId());
+    // 通过模板对象的租户id拿到问卷模板制作者
+    SysTenant maker = sysTenantMapper.selectById(survey.getTenantId());
     // 取用户对象
     String userName = sysUserService.getUserNameByTenantId(tenantId);
     SysUser user = sysUserService.getUserByName(userName);
-
+    // 取到maker用户对象
+    String makerName = sysUserService.getUserNameByTenantId(survey.getTenantId());
+    SysUser userMaker = sysUserService.getUserByName(makerName);
     // 判断租户积分是否足够
     if(tenant.getIntegral()<survey.getCredit()){
       return false;
@@ -2777,6 +2762,13 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     // 用户扣除积分
     user.setIntegral(user.getIntegral()-survey.getCredit());
     sysUserService.deductIntegral(user);
+    if (!"0".equals(survey.getTenantId())){
+      // 制作者用户加积分
+      sysUserService.updateIntegral(userMaker.getId(), (int) (survey.getCredit()*0.5));
+      // 制作者租户加积分
+      maker.setIntegral((int) ((maker.getIntegral()+survey.getCredit())*0.5));
+      sysTenantMapper.update(maker,new LambdaQueryWrapper<SysTenant>().eq(SysTenant::getId,maker.getId()));
+    }
     return true;
   }
 
