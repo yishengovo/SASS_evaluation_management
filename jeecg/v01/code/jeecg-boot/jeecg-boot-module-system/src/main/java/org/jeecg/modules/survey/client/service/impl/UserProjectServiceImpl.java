@@ -129,20 +129,18 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
 
   @Override
   public SurProject createProject(CreateProjectReq req) {
-    //        if (req.getName() == null || req.getName().equals("")) {
-    //            return null;
-    //        }
     // 如果有项目id则更新
     if (req.getId() != null) {
       // 根据项目id查询项目
       SurProject project = projectService.getById(req.getId());
-      //            project.setProjectName(req.getName());
-      //            project.setContent(req.getContent());
       // 根据项目id查询问卷
+      // 此处userSurveyMapper是SurSurveyProject表的mapper
       SurSurveyProject survey =
           userSurveyMapper.selectOne(
               new LambdaQueryWrapper<SurSurveyProject>()
+                      // 条件：租户问卷对应的id==复制模板后的问卷id
                   .eq(SurSurveyProject::getId, project.getSurveyCurrentId()));
+      // 如果有问卷
       if (survey != null) {
         survey.setSurName(req.getName());
         survey.setType(req.getType());
@@ -154,8 +152,9 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
             new LambdaQueryWrapper<SurResult>().eq(SurResult::getSurveyUid, survey.getId()));
         userResultMapper.delete(
             new LambdaQueryWrapper<SurUserResult>().eq(SurUserResult::getSurveyId, survey.getId()));
+        // 将项目已经提交的人数清零
         project.setCollectNumber(0);
-        // 将isAddUser置为false
+        // 将项目是否需要添加人员置为false
         project.setIsAddUser(false);
         // 删除用户
         userMapper.delete(
@@ -172,31 +171,39 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
         survey.setType(req.getType());
         survey.setJsonPreview(req.getJsonPreview());
         userSurveyMapper.insert(survey);
+        // 插入的过程自动生成主键，并且会set给对象属性
         project.setSurveyCurrentId(survey.getId());
       }
       projectService.updateById(project);
       // 如果有问题的话 先删除原来的问题 再去保存新的问题
+      // 属于该问卷的所有问题
       List<SurQuestionProject> questions =
           userSurveyQuestionMapper.selectList(
               new LambdaQueryWrapper<SurQuestionProject>()
                   .eq(SurQuestionProject::getSurveyUid, project.getSurveyCurrentId()));
+      // 获取所有问题的id，去除重复
       List<String> questionIList =
           questions.stream().map(SurQuestionProject::getId).distinct().collect(Collectors.toList());
+      // 根据所有问题的id，批量删除
       if (!questionIList.isEmpty()) {
         userSurveyQuestionMapper.deleteBatchIds(questionIList);
       }
+      // 属于该问卷的所有问题选项
       List<SurQuestionChoiceProject> questionChoices =
           userSurveyChoiceMapper.selectList(
               new LambdaQueryWrapper<SurQuestionChoiceProject>()
                   .eq(SurQuestionChoiceProject::getSurveyUid, project.getSurveyCurrentId()));
+      // 拿到所有选项的id
       List<String> questionChoiceList =
           questionChoices.stream()
               .map(SurQuestionChoiceProject::getId)
               .distinct()
               .collect(Collectors.toList());
+      // 根据问题选项id，批量删除
       if (!questionChoiceList.isEmpty()) {
         userSurveyChoiceMapper.deleteBatchIds(questionChoiceList);
       }
+
       // 将参数中的问题保存到 question和choices表中
       List<SurveyQuestionReq> questionList = req.getQuestion();
       SurQuestionProject surQuestion;
@@ -218,6 +225,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
           SurQuestionChoiceProject surQuestionChoice = new SurQuestionChoiceProject();
           surQuestionChoice.setQuestionId(surQuestion.getId());
           surQuestionChoice.setSurveyUid(survey.getId());
+          // 将choiceList转化成json字符串
           String choiceListJson = JSONObject.toJSONString(choices);
           surQuestionChoice.setContent(choiceListJson);
           for (int i = 0; i < choices.size(); i++) {
@@ -250,7 +258,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
             surQuestion.setParentId(parentQuestion.getId());
             surQuestion.setParentContent(parentQuestion.getContent());
             userSurveyQuestionMapper.insert(surQuestion);
-            // 遍历choices 将每个答案存到数据库中
+            // 遍历choices 将每个选项存到数据库中
             SurQuestionChoiceProject surQuestionChoice = new SurQuestionChoiceProject();
             surQuestionChoice.setQuestionId(surQuestion.getId());
             surQuestionChoice.setSurveyUid(survey.getId());
@@ -268,19 +276,23 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     }
     // 如果没有id则新建项目
     else {
+      // 创建新项目
       SurProject project = new SurProject();
       BeanUtils.copyProperties(req, project);
+      // 部分字段对应不上，需要手动赋值
       project.setProjectName(req.getName());
       project.setSelectNumber(0);
       project.setCollectNumber(0);
       project.setIsPublish(false);
       project.setIsDel(false);
+      // 创建新问卷，调查和360目前只能手动创建问卷，所以项目本体和问卷是一对一
       SurSurveyProject survey = new SurSurveyProject();
       survey.setSurName(req.getName());
       survey.setSurContent(req.getContent());
       survey.setJsonPreview(req.getJsonPreview());
       survey.setType(req.getType());
       userSurveyMapper.insert(survey);
+      // 插入的时候，雪花算法可以生成主键值，并通过set方法给对象赋值，所以可以直接拿到
       project.setSurveyCurrentId(survey.getId());
       projectService.save(project);
       // 创建问卷和项目关系
@@ -310,9 +322,11 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
       SurQuestionProject surQuestion;
       for (SurveyQuestionReq question : questionList) {
         // 判断是单个问题还是矩阵里的问题
-        // 如果是单个问题
+        // 如果是单个问题，那么矩阵问题名称是空的
         if (StringUtils.isNotBlank(question.getName()) && question.getNames().isEmpty()) {
+          // 每个选项的分值
           List<Integer> score = new ArrayList<>();
+          // 放到question_project表中
           surQuestion = new SurQuestionProject();
           List<String> choices = question.getChoices();
           // 将问题插入到question表中
@@ -326,11 +340,13 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
           SurQuestionChoiceProject surQuestionChoice = new SurQuestionChoiceProject();
           surQuestionChoice.setQuestionId(surQuestion.getId());
           surQuestionChoice.setSurveyUid(survey.getId());
+          // JSONObject.toJSONString()默认忽略值为null的属性
           String choiceListJson = JSONObject.toJSONString(choices);
           surQuestionChoice.setContent(choiceListJson);
           for (int i = 0; i < choices.size(); i++) {
             score.add(0);
           }
+          // 直接转成字符串
           surQuestionChoice.setBasicScore(score.toString());
           userSurveyChoiceMapper.insert(surQuestionChoice);
         }
@@ -378,37 +394,53 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
 
   @Override
   public SurSurveyProject surveyMarketSave(SurveyMarketSaveReq req) {
+    // 先通过问题id查到问卷
     SurSurveyProject survey =
             userSurveyMapper.selectOne(
                     new LambdaQueryWrapper<SurSurveyProject>()
                             .eq(SurSurveyProject::getId, req.getSurveyId()));
-    survey.setSurName(req.getName());
-    survey.setType(req.getType());
-    survey.setSurContent(req.getContent());
-    survey.setJsonPreview(req.getJsonPreview());
+
+    // 判断是否拿到问卷
+    if (survey==null) {
+      return null;
+    }
+
+    // 不为null,则执行更新
+    survey.setSurName(req.getName())
+            .setType(req.getType())
+            .setJsonPreview(req.getJsonPreview())
+            .setSurContent(req.getContent());
     userSurveyMapper.updateById(survey);
 
+    // 如果有问题的话 先删除原来的问题 再去保存新的问题
+    // 属于该问卷的所有问题
     List<SurQuestionProject> questions =
             userSurveyQuestionMapper.selectList(
                     new LambdaQueryWrapper<SurQuestionProject>()
-                            .eq(SurQuestionProject::getSurveyUid, req.getSurveyId()));
+                            .eq(SurQuestionProject::getSurveyUid, survey.getId()));
+    // 获取所有问题的id，去除重复
     List<String> questionIList =
             questions.stream().map(SurQuestionProject::getId).distinct().collect(Collectors.toList());
+    // 根据所有问题的id，批量删除
     if (!questionIList.isEmpty()) {
       userSurveyQuestionMapper.deleteBatchIds(questionIList);
     }
+    // 属于该问卷的所有问题选项
     List<SurQuestionChoiceProject> questionChoices =
             userSurveyChoiceMapper.selectList(
                     new LambdaQueryWrapper<SurQuestionChoiceProject>()
-                            .eq(SurQuestionChoiceProject::getSurveyUid, req.getSurveyId()));
+                            .eq(SurQuestionChoiceProject::getSurveyUid, survey.getId()));
+    // 拿到所有选项的id
     List<String> questionChoiceList =
             questionChoices.stream()
                     .map(SurQuestionChoiceProject::getId)
                     .distinct()
                     .collect(Collectors.toList());
+    // 根据问题选项id，批量删除
     if (!questionChoiceList.isEmpty()) {
       userSurveyChoiceMapper.deleteBatchIds(questionChoiceList);
     }
+
     // 将参数中的问题保存到 question和choices表中
     List<SurveyQuestionReq> questionList = req.getQuestion();
     SurQuestionProject surQuestion;
@@ -430,6 +462,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
         SurQuestionChoiceProject surQuestionChoice = new SurQuestionChoiceProject();
         surQuestionChoice.setQuestionId(surQuestion.getId());
         surQuestionChoice.setSurveyUid(survey.getId());
+        // 将choiceList转化成json字符串
         String choiceListJson = JSONObject.toJSONString(choices);
         surQuestionChoice.setContent(choiceListJson);
         for (int i = 0; i < choices.size(); i++) {
@@ -462,7 +495,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
           surQuestion.setParentId(parentQuestion.getId());
           surQuestion.setParentContent(parentQuestion.getContent());
           userSurveyQuestionMapper.insert(surQuestion);
-          // 遍历choices 将每个答案存到数据库中
+          // 遍历choices 将每个选项存到数据库中
           SurQuestionChoiceProject surQuestionChoice = new SurQuestionChoiceProject();
           surQuestionChoice.setQuestionId(surQuestion.getId());
           surQuestionChoice.setSurveyUid(survey.getId());
@@ -478,6 +511,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     }
     return survey;
   }
+
 
   @Override
   public Page<SurProject> getProjectList(ProjectAdvancedQueryReq req) {
@@ -2603,26 +2637,22 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     List<SurSurveyTenant> surSurveyTenantList =
             surSurveyTenantMapper.selectList(
                     new LambdaQueryWrapper<SurSurveyTenant>().eq(SurSurveyTenant::getTenantId, tenantId));
-    // 遍历问卷租户关系
+    //取出所有的问卷id
+    List<String> surveyIds =
+            surSurveyTenantList.stream().map(SurSurveyTenant::getSurveyId).distinct().collect(Collectors.toList());
+    // 查询用户自己的问卷表
+    List<SurSurveyProject> surSurveyProjects =
+            userSurveyMapper.selectList(
+                    new LambdaQueryWrapper<SurSurveyProject>().eq(SurSurveyProject::getTenantId, tenantId));
+    // 遍历用户自己的问卷,同时取出所有购买的问卷
     if (req.getType().equals("我的") && !StringUtils.isEmpty(req.getType())) {
-      surSurveyTenantList.forEach(
-              surSurveyTenant -> {
-                Survey select =
-                        surveyMapper.selectOne(
-                                new LambdaQueryWrapper<Survey>()
-                                        .eq(Survey::getId, surSurveyTenant.getSurveyId()));
-                exclusive.add(select);
-              });
-    } else {
-      surSurveyTenantList.forEach(
-              surSurveyTenant -> {
-                Survey select =
-                        surveyMapper.selectOne(
-                                new LambdaQueryWrapper<Survey>()
-                                        .eq(Survey::getId, surSurveyTenant.getSurveyId())
-                                        .eq(Survey::getType, req.getType()));
-                exclusive.add(select);
-              });
+      for (SurSurveyProject surSurveyProject : surSurveyProjects){
+        if (surveyIds.contains(surSurveyProject.getSrcId())){
+          Survey survey = new Survey();
+          BeanUtils.copyProperties(surSurveyProject,survey);
+          exclusive.add(survey);
+        }
+      }
     }
     // 过滤掉exclusive里面的null
     List<Survey> exclusiveList =
@@ -2681,7 +2711,8 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
             .setSurContent(survey.getSurContent())
             .setJsonPreview(survey.getJsonPreview())
             .setSysOrgCode(survey.getOrgUid())
-            .setTenantId(tenantId);
+            .setTenantId(tenantId)
+            .setSrcId(survey.getId());
     userSurveyMapper.insert(surSurveyProject);
 
     // 问卷问题复制到用户问卷问题

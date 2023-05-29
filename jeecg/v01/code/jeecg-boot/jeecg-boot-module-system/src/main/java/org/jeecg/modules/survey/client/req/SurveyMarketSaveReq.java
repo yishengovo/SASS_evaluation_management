@@ -8,9 +8,9 @@ import java.util.List;
 @Data
 @ApiModel(value = "SurveyMarketSaveReq", description = "问卷保存参数")
 public class SurveyMarketSaveReq {
-    // 问卷名称
+    //问卷名称
     private String name;
-    // 类型
+    //类型
     private String type;
     //问卷id
     private String surveyId;
@@ -18,6 +18,6 @@ public class SurveyMarketSaveReq {
     private String jsonPreview;
     //问题和选项
     private List<SurveyQuestionReq> question;
-    // 问卷描述
+    //问卷描述
     private String content;
 }

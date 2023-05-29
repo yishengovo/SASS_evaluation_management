@@ -800,10 +800,10 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
   @PostMapping(value = "/surveyMarketSave")
   public Result<?> surveyMarketSave(@RequestBody SurveyMarketSaveReq req) {
     SurSurveyProject surSurveyProject = userProjectService.surveyMarketSave(req);
-    if (surSurveyProject!=null) {
-      return Result.OK(surSurveyProject);
-    }else {
-      return Result.error(500, "保存失败");
+      if (surSurveyProject!=null) {
+        return Result.OK(surSurveyProject);
+      }else {
+        return Result.error(500, "保存失败");
     }
   }
 
