@@ -2809,14 +2809,18 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
 
   // 取得用户对象
   SysTenant tenant = sysTenantMapper.selectById(tenantId);
+  SysUser user = sysUserMapper.selectOne(new LambdaQueryWrapper<SysUser>()
+          .eq(SysUser::getRelTenantIds,tenantId));
 
   //用户问卷模板的上传所需的积分(也可以不写死，可以让前端传值过来)
-  if((tenant.getIntegral()-1)<0){
+  if((tenant.getIntegral()-1)<0 && (user.getIntegral()-1)<0){
     return false;
   }
 
   tenant.setIntegral((tenant.getIntegral()-1));
+  user.setIntegral((user.getIntegral()-1));
   sysTenantMapper.update(tenant,new LambdaQueryWrapper<SysTenant>().eq(SysTenant::getId,tenantId));
+  sysUserMapper.update(user,new LambdaQueryWrapper<SysUser>().eq(SysUser::getRelTenantIds,tenantId));
 
   //判断是否编辑过
 //  if(!surSurveyProject.getIsEdit()){
