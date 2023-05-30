@@ -34,6 +34,7 @@ import org.jeecg.modules.survey.survey.req.ChoiceByQuestionIdReq;
 import org.jeecg.modules.survey.survey.req.CollectReq;
 import org.jeecg.modules.survey.survey.req.ScoreSetReq;
 import org.jeecg.modules.survey.survey.service.ISurProjectService;
+import org.jeecg.modules.survey.survey.service.ISurSurveyProjectService;
 import org.jeecg.modules.survey.survey.utils.ListUtils;
 import org.jeecg.modules.survey.survey.utils.NumUtils;
 import org.jeecg.modules.system.entity.SysTenant;
@@ -72,6 +73,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
   @Autowired private ISysUserService sysUserService;
   @Autowired private SurveyMapper surveyMapper;
   @Autowired private SysTenantMapper sysTenantMapper;
+  @Autowired private ISurSurveyProjectService surSurveyProjectService;
 
   @Autowired private SurProjectSurveyMapper projectSurveyMapper;
   @Autowired private SurQuestionMapper surQuestionMapper;
@@ -126,6 +128,25 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
       return projectDto;
     }
   }
+
+  @Override
+  public Object querySurveyProject(String surveyId) {
+    SurSurveyProject userProject = surSurveyProjectService.getById(surveyId);
+    if (userProject == null) {
+      return null;
+    }
+    // 获取url
+    String url = (String) redisUtil.get("oss:excel");
+    SurveyProjectDto surveyProjectDto = new SurveyProjectDto();
+    SurSurveyProject survey =
+            userSurveyMapper.selectOne(
+                    new LambdaQueryWrapper<SurSurveyProject>()
+                            .eq(SurSurveyProject::getId,surveyId));
+    surveyProjectDto.setSurvey(survey);
+    surveyProjectDto.setUrl(url);
+      return surveyProjectDto;
+  }
+
 
   @Override
   public SurProject createProject(CreateProjectReq req) {
@@ -300,23 +321,6 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
       surProjectSurvey.setProjectId(project.getId());
       surProjectSurvey.setSurveyId(survey.getId());
       projectSurveyMapper.insert(surProjectSurvey);
-      // 如果有问题的话 先删除原来的问题 再去保存新的问题
-      //            List<UserSurveyQuestion> questions = userSurveyQuestionMapper.selectList(new
-      // LambdaQueryWrapper<UserSurveyQuestion>().eq(UserSurveyQuestion::getSurveyUid,
-      // req.getSurveyId()));
-      //            List<String> questionIList =
-      // questions.stream().map(UserSurveyQuestion::getId).distinct().collect(Collectors.toList());
-      //            if (!questionIList.isEmpty()) {
-      //                userSurveyQuestionMapper.deleteBatchIds(questionIList);
-      //            }
-      //            List<UserSurveyChoice> questionChoices = userSurveyChoiceMapper.selectList(new
-      // LambdaQueryWrapper<UserSurveyChoice>().eq(UserSurveyChoice::getSurveyUid,
-      // req.getSurveyId()));
-      //            List<String> questionChoiceList =
-      // questionChoices.stream().map(UserSurveyChoice::getId).distinct().collect(Collectors.toList());
-      //            if (!questionChoiceList.isEmpty()) {
-      //                userSurveyChoiceMapper.deleteBatchIds(questionChoiceList);
-      //            }
       // 将参数中的问题保存到 question和choices表中
       List<SurveyQuestionReq> questionList = req.getQuestion();
       SurQuestionProject surQuestion;
@@ -401,9 +405,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
                             .eq(SurSurveyProject::getId, req.getSurveyId()));
 
     // 判断是否拿到问卷
-    if (survey==null) {
-      return null;
-    }
+    if (survey==null) return null;
 
     // 不为null,则执行更新
     survey.setSurName(req.getName())
@@ -2680,22 +2682,21 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
 
   @Override
   public Boolean purchaseByPoint(PurchaseReq req, String tenantId) {
-    // 取得用户对象
+    // 取得租户对象
     SysTenant tenant = sysTenantMapper.selectById(tenantId);
     // 取得问卷模板对象
     Survey survey = surveyMapper.selectById(req.getSurveyId());
+    // 通过模板对象的租户id拿到问卷模板制作者
+    SysTenant maker = sysTenantMapper.selectById(survey.getTenantId());
     // 取用户对象
-    String userName = sysUserService.getUserNameByTenantId(tenantId);
-    SysUser user = sysUserService.getUserByName(userName);
+    SysUser user = sysUserMapper.selectOne(new LambdaQueryWrapper<SysUser>()
+            .eq(SysUser::getRelTenantIds,tenantId));
+    // 取到maker用户对象
+    SysUser userMaker = sysUserMapper.selectOne(new LambdaQueryWrapper<SysUser>()
+            .eq(SysUser::getRelTenantIds,survey.getTenantId()));
+    // 判断租户积分是否足够,判断用户积分是否足够
+    if(tenant.getIntegral()<survey.getCredit() || user.getIntegral()<survey.getCredit()) return false;
 
-    // 判断租户积分是否足够
-    if(tenant.getIntegral()<survey.getCredit()){
-      return false;
-    }
-    // 判断用户积分是否足够
-    if (user.getIntegral()<survey.getCredit()){
-      return false;
-    }
     // 取得问卷问题
     List<SurQuestion> surQuestions = surQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestion>()
             .eq(SurQuestion::getSurveyUid, req.getSurveyId()));
@@ -2706,44 +2707,35 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
 
     // 问卷模板复制到用户问卷模板
     SurSurveyProject surSurveyProject = new SurSurveyProject();
-    surSurveyProject.setType(survey.getType())
-            .setSurName(survey.getSurName())
-            .setSurContent(survey.getSurContent())
-            .setJsonPreview(survey.getJsonPreview())
-            .setSysOrgCode(survey.getOrgUid())
+    BeanUtils.copyProperties(survey,surSurveyProject);
+    surSurveyProject.setSysOrgCode(survey.getOrgUid())
             .setTenantId(tenantId)
             .setSrcId(survey.getId());
     userSurveyMapper.insert(surSurveyProject);
 
     // 问卷问题复制到用户问卷问题
+
     //获取问卷id（通过迭代器获取）
-    List<SurSurveyProject> recentSurSurveyProjects = userSurveyMapper.selectList(new LambdaQueryWrapper<SurSurveyProject>()
+    /*List<SurSurveyProject> recentSurSurveyProjects = userSurveyMapper.selectList(new LambdaQueryWrapper<SurSurveyProject>()
             .eq(SurSurveyProject::getTenantId,tenantId));
     Iterator<SurSurveyProject> iter = recentSurSurveyProjects.iterator();
     SurSurveyProject recentSurSurveyProject =new SurSurveyProject();
     while(iter.hasNext()){
       recentSurSurveyProject = iter.next();
-    }
+    }*/
 
     for (SurQuestion surQuestion : surQuestions) {
       SurQuestionProject surQuestionProject = new SurQuestionProject();
-      surQuestionProject.setSurveyUid(recentSurSurveyProject.getId())
-              .setContent(surQuestion.getContent())
-              .setIsParent(surQuestion.getIsParent())
-              .setParentId(surQuestion.getParentId())
-              .setParentContent(surQuestion.getParentContent())
+      BeanUtils.copyProperties(surQuestion,surQuestionProject);
+      surQuestionProject.setSurveyUid(surSurveyProject.getId())
               .setSysOrgCode(surQuestion.getOrgUid())
-              .setTitle(surQuestion.getTitle())
-              .setTypeId(surQuestion.getTypeId())
-              .setDimensionId(surQuestion.getDimensionId())
-              .setRequired(surQuestion.getRequired())
-              .setTenantId(recentSurSurveyProject.getTenantId());
+              .setTenantId(surSurveyProject.getTenantId());
       userSurveyQuestionMapper.insert(surQuestionProject);
     }
 
     // 问题选项复制到用户问题选项
     List<SurQuestionProject> recentSurQuestionProjects = userSurveyQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestionProject>()
-            .eq(SurQuestionProject::getSurveyUid,recentSurSurveyProject.getId()));
+            .eq(SurQuestionProject::getSurveyUid,surSurveyProject.getId()));
     String [] questionIds = new String[1000];
     int index = 0;
     for (SurQuestionProject recentSurQuestionProject: recentSurQuestionProjects) {
@@ -2754,12 +2746,10 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     int i =0;
     for (SurQuestionChoice surQuestionChoice:surQuestionChoices) {
       SurQuestionChoiceProject surQuestionChoiceProject = new SurQuestionChoiceProject();
-      surQuestionChoiceProject.setSurveyUid(recentSurSurveyProject.getId())
-              .setContent(surQuestionChoice.getContent())
-              .setBasicScore(surQuestionChoice.getBasicScore())
-              .setRequired(surQuestionChoice.getRequired())
+      BeanUtils.copyProperties(surQuestionChoice,surQuestionChoiceProject);
+      surQuestionChoiceProject.setSurveyUid(surSurveyProject.getId())
               .setSysOrgCode(surQuestionChoice.getOrgUid())
-              .setTenantId(recentSurSurveyProject.getTenantId())
+              .setTenantId(surSurveyProject.getTenantId())
               .setQuestionId(questionIds[i]);
       userSurveyChoiceMapper.insert(surQuestionChoiceProject);
       i=i+1;
@@ -2777,6 +2767,13 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     // 用户扣除积分
     user.setIntegral(user.getIntegral()-survey.getCredit());
     sysUserService.deductIntegral(user);
+    if (!("0".equals(survey.getTenantId()))){
+      // 制作者用户加积分
+      sysUserService.updateIntegral(userMaker.getId(), (int) (survey.getCredit()*0.5));
+      // 制作者租户加积分
+      maker.setIntegral((int) ((maker.getIntegral()+survey.getCredit())*0.5));
+      sysTenantMapper.update(maker,new LambdaQueryWrapper<SysTenant>().eq(SysTenant::getId,maker.getId()));
+    }
     return true;
   }
 
@@ -2788,14 +2785,16 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
 
   // 取得用户对象
   SysTenant tenant = sysTenantMapper.selectById(tenantId);
+  SysUser user = sysUserMapper.selectOne(new LambdaQueryWrapper<SysUser>()
+          .eq(SysUser::getRelTenantIds,tenantId));
 
   //用户问卷模板的上传所需的积分(也可以不写死，可以让前端传值过来)
-  if((tenant.getIntegral()-1)<0){
-    return false;
-  }
+  if((tenant.getIntegral()-1)<0 || (user.getIntegral()-1)<0) return false;
 
   tenant.setIntegral((tenant.getIntegral()-1));
+  user.setIntegral((user.getIntegral()-1));
   sysTenantMapper.update(tenant,new LambdaQueryWrapper<SysTenant>().eq(SysTenant::getId,tenantId));
+  sysUserMapper.update(user,new LambdaQueryWrapper<SysUser>().eq(SysUser::getRelTenantIds,tenantId));
 
   //判断是否编辑过
 //  if(!surSurveyProject.getIsEdit()){
@@ -2821,15 +2820,9 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     List<SurQuestionChoiceProject> surQuestionChoiceProjects = userSurveyChoiceMapper.selectList(new LambdaQueryWrapper<SurQuestionChoiceProject>()
             .eq(SurQuestionChoiceProject::getSurveyUid, req.getSurveyProjectId()));
 
-    // 用户问卷问题复制到问卷问题
-    //利用迭代器
-    List<Survey> recentSurSurveys = surveyMapper.selectList(new LambdaQueryWrapper<Survey>()
-            .eq(Survey::getTenantId,tenantId));
-    Iterator<Survey> iter = recentSurSurveys.iterator();
-    Survey recentSurSurvey =new Survey();
-    while(iter.hasNext()){
-      recentSurSurvey = iter.next();
-    }
+    //mybatisPlus自带的雪花算法，直接获取刚插入的id值
+    //获取市场模板上的一条数据
+    Survey recentSurSurvey = surveyMapper.selectById(survey.getId());
 
     for (SurQuestionProject surQuestionProject : surQuestionProjects) {
       SurQuestion surQuestion = new SurQuestion();
