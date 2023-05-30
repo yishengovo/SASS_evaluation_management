@@ -2643,9 +2643,14 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     List<String> surveyIds =
             surSurveyTenantList.stream().map(SurSurveyTenant::getSurveyId).distinct().collect(Collectors.toList());
     // 查询用户自己的问卷表
+    LambdaQueryWrapper<SurSurveyProject> queryAllWrapper =
+            new LambdaQueryWrapper<SurSurveyProject>()
+                    .eq(SurSurveyProject::getTenantId, tenantId);
+    if (req.getName() != null && !StringUtils.isEmpty(req.getName())) {
+      queryAllWrapper.like(SurSurveyProject::getSurName, req.getName());
+    }
     List<SurSurveyProject> surSurveyProjects =
-            userSurveyMapper.selectList(
-                    new LambdaQueryWrapper<SurSurveyProject>().eq(SurSurveyProject::getTenantId, tenantId));
+            userSurveyMapper.selectList(queryAllWrapper);
     // 遍历用户自己的问卷,同时取出所有购买的问卷
     if (req.getType().equals("我的") && !StringUtils.isEmpty(req.getType())) {
       for (SurSurveyProject surSurveyProject : surSurveyProjects){
@@ -2659,6 +2664,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     // 过滤掉exclusive里面的null
     List<Survey> exclusiveList =
             exclusive.stream().filter(Objects::nonNull).collect(Collectors.toList());
+
     // 对exclusiveList进行分页
     List<Survey> collect =
             exclusiveList.stream()
