@@ -9,7 +9,7 @@
  * Copyright (c) 2022 by “Augsut-Rushme” 864011713@qq.com, All Rights Reserved.
  */
 import { IDataType } from '../type'
-import { IGetTemplate, ITemplateResult } from './type'
+import { IGetTemplate, ITemplateResult, ISaveTemplate } from './type'
 import { useApi } from '/@src/composable/useApi'
 
 const api = useApi()
@@ -18,8 +18,12 @@ enum surTemplateApi {
   GetTemplate = '/client/userProject/getSurveyTemplate',
   GetMyTemplate = '/client/userProject/getExclusiveSurveyTemplate',
   BuyTemplate = '/client/userProject/purchaseByPoint',
-  EditTemplate = '/client/userProject/editMyTemplateById',
-  PushTemplate = '/client/userProject/pushMyTemplate'
+  SaveTemplate = '/client/userProject/surveyMarketSave',
+  PushTemplate = '/client/userProject/uploadTemplate'
+}
+
+export const saveTemplateApi = (data: ISaveTemplate): Promise<IDataType<any>> => {
+  return api.post(surTemplateApi.SaveTemplate, data)
 }
 
 export const getTemplateApi = (
@@ -36,11 +40,11 @@ export const buyTemplateApi = (data: {}) => {
   return api.post(surTemplateApi.BuyTemplate, data)
 }
 
-export const editTemplateApi = (surveyId: string) => {
-  return api.post(surTemplateApi.EditTemplate, surveyId)
-}
+// export const editTemplateApi = (surveyId: string) => {
+//   return api.post(surTemplateApi.EditTemplate, surveyId)
+// }
 
-export const PushTemplateApi = (surveyId: string) => {
-  return api.post(surTemplateApi.PushTemplate, surveyId)
+export const PushTemplateApi = (data: {}) => {
+  return api.post(surTemplateApi.PushTemplate, data)
 }
 

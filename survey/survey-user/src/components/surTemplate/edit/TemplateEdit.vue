@@ -1,12 +1,12 @@
 <!--
- * @Author: August-Rushme
- * @Date: 2022-09-24 20:50:24
- * @LastEditors: August Rush 864011713@qq.com
- * @LastEditTime: 2023-01-30 10:41:13
- * @FilePath: \survey-user\src\components\survey\creator\SurveyCreator.vue
+ * @Author: qiaoqi
+ * @Date: 2023-05-29 20:50:24
+ * @LastEditors: qiaoqi 2507260744@qq.com
+ * @LastEditTime: 2023-05-29 20:50:24
+ * @FilePath: \survey-user\src\components\survey\creator\TemplateEdit.vue
  * @Description:
  *
- * Copyright (c) 2022 by August-Rushme 864011713zqy@gmail.com, All Rights Reserved.
+ * Copyright (c) 2023 by qiaoqi booleanchar12@gmail.com, All Rights Reserved.
 -->
 <script setup lang="ts">
 import { SurveyCreator } from 'survey-creator-knockout'
@@ -23,8 +23,9 @@ import { WizardType } from '/@src/models/wizard'
 import { Notice } from '/@src/components/base/au-notice/Notice'
 import { LocationQueryValue } from 'vue-router'
 import { analysisQuestion } from '/@src/utils/survey/creator/question/analyzeQuestion'
+import { saveTemplateApi } from '/@src/api/surTemplate/surTemplate'
 
-interface ProjectInfo {
+interface TemplateInfo {
   name: string
   content?: string
   type: WizardType
@@ -33,8 +34,8 @@ interface ProjectInfo {
 }
 
 const props = defineProps({
-  projectInfo: {
-    type: Object as PropType<ProjectInfo>,
+  templateInfo: {
+    type: Object as PropType<TemplateInfo>,
     default: () => {},
     require: true,
   },
@@ -42,7 +43,7 @@ const props = defineProps({
 
 const router = useRouter()
 
-const emit = defineEmits(['saveSurvey'])
+const emit = defineEmits(['saveTemplate'])
 
 const defaultJson = {
   locale: 'zh-cn',
@@ -60,7 +61,8 @@ const creatorOptions = {
 }
 const creator = new SurveyCreator(creatorOptions)
 onMounted(() => {
-  creator.text = props.projectInfo.jsonPreview ?? JSON.stringify(defaultJson)
+  // console.log("111111111111111111111111111",props);
+  creator.text = props.templateInfo.jsonPreview ?? JSON.stringify(defaultJson)
   // 渲染问卷组件
   creator.render('creatorElement')
 })
@@ -78,11 +80,11 @@ creator.saveSurveyFunc = () => {
   const [questions, surveyJson] = analysisQuestion(json)
 
   if (questions.length > 0) {
-    addProject({
-      id: props.projectInfo.id,
-      name: props.projectInfo.id == null ? props.projectInfo.name : '',
-      content: props.projectInfo.id == null ? props.projectInfo.content : '',
-      type: props.projectInfo.type,
+    saveTemplateApi({
+      surveyId: props.templateInfo.id,
+      name: props.templateInfo.name,
+      content: props.templateInfo.content,
+      type: props.templateInfo.type,
       jsonPreview: JSON.stringify(surveyJson),
       question: questions,
     }).then(async (result) => {
@@ -92,9 +94,9 @@ creator.saveSurveyFunc = () => {
           notice_type: 'error',
         })
       } else {
-        emit('saveSurvey', result.data.result.id)
-        _props.value.projectInfo.id = result.data.result.id
-        router.replace('/wizard-v1/project-details?id=' + result.data.result.id)
+        emit('saveTemplate')
+        // _props.value.templateInfo.id = result.data.result.id
+        // router.replace('/wizard-v1/project-details?id=' + result.data.result.id)
         Notice({
           message: '保存成功',
           notice_type: 'success',

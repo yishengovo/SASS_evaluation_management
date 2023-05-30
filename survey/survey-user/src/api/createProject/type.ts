@@ -18,6 +18,7 @@ interface Questions {
   choices: string[]
   type?: string
 }
+
 export interface AddPorject {
   name: string
   content?: string
@@ -32,6 +33,14 @@ export interface ProjectInfo {
   survey: Survey
   surveyList: Survey[]
   url: string
+}
+
+export interface TemplateInfo {
+  name: string
+  content?: string
+  type: WizardType
+  id: string | LocationQueryValue[] | null
+  jsonPreview: string | undefined
 }
 
 export interface Survey {

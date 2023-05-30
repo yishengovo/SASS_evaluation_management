@@ -6,9 +6,10 @@
  * @Description: file content
 -->
 <script lang="ts" setup>
-import { getTemplateApi, buyTemplateApi, editTemplateApi, PushTemplateApi } from '/@src/api/surTemplate/surTemplate'
+import { getTemplateApi, buyTemplateApi, PushTemplateApi } from '/@src/api/surTemplate/surTemplate'
 import { Record } from '/@src/api/surTemplate/type'
 import { Notice } from '/@src/components/base/au-notice/Notice'
+import type { TemplateInfo } from '/@src/api/createProject/type'
 type propsType = {
   type: '测评' | '调查' | '360度评估' | '我的'
 }
@@ -26,10 +27,20 @@ watch(currentPage, async (newValue) => {
   pageInfo.value.pageNum = newValue
   await getTemplate()
 })
+const router = useRouter()
 const showSurveyPreview = ref(false)
+const showPushMySurvey = ref(false)
 const isLoaderActive = ref(false)
 const searchName = ref('')
+const currentSurveyId = ref('')
+const currentSurveyCredit = ref()
+const showPushSurveyModal = ref(false)
 const templateData = ref<Record[]>([])
+
+const saveTemplate = () => {
+  getTemplate()
+}
+
 // 查询问卷模板
 const getTemplate = async (searchName = '') => {
   isLoaderActive.value = true
@@ -38,6 +49,7 @@ const getTemplate = async (searchName = '') => {
     type: props.type,
     name: searchName,
   })
+  console.log(res);
   templateData.value = res.data.result.records
   total.value = res.data.result.total
   if (res.data.code !== 200) {
@@ -56,6 +68,7 @@ const searchTemplate = async () => {
 const buyTemplate = async (id: string) => {
   isLoaderActive.value = true
   const res = await buyTemplateApi({surveyId: id})
+  // console.log(res.data);
   if (res.data.code === 500) {
     isLoaderActive.value = false
     return Notice({
@@ -70,13 +83,74 @@ const buyTemplate = async (id: string) => {
     })
   }
 }
+// 弹窗相关
+const showDialog = ref(false)
+const onClose = () => {
+  showDialog.value = false
+}
+// 模板问卷（调查和360）
+const templateInfo = ref<any>({})
 // 编辑我的问卷模板
-const editTemplate = async (id: string) => {
+const editTemplate = async (item: any) => {
+  // console.log(item.id, item.surName);
+  templateInfo.value.id = item.id
+  templateInfo.value.name = item.surName
+  templateInfo.value.content = item.surContent
+  templateInfo.value.type = item.type
+  templateInfo.value.jsonPreview = item.jsonPreview
+  // console.log(templateInfo);
+  isLoaderActive.value = false
+  showDialog.value = true
+}
 
-} 
+// 模板小卡片底部展示的三种情况
+function isShowEditAndPush(type: string) : string {
+  if(props.type === '我的' && type === '测评') {
+    return '我的测评'
+  } else if (props.type !== '我的') {
+    return '市场'
+  } else {
+    return '我的调查和360'
+  }
+}
+
+// 打开上传问卷的弹窗
+const openPushModal = (id: string) => {
+  currentSurveyId.value = id
+  currentSurveyCredit.value = ''
+  showPushSurveyModal.value = true
+}
+// 关闭上传问卷的弹窗
+const cancelPushSurvey = () => {
+  showPushSurveyModal.value = false
+}
+// 确定上传问卷
+const pushMySurvey = () => {
+  pushTemplate()
+  console.log("currentSurveyId:",currentSurveyId.value);
+  console.log("currentSurveyCredit:",currentSurveyCredit.value);
+}
+
 // 上传我的问卷模板
-const pushTemplate = async (id: string) => {
+const pushTemplate = async () => {
+  isLoaderActive.value = true
   
+  const res = await PushTemplateApi({surveyProjectId: currentSurveyId.value, credit: parseInt(currentSurveyCredit.value)})
+  console.log(res.data);
+  if (res.data.code === 500) {
+    isLoaderActive.value = false
+    return Notice({
+      notice_type: 'error',
+      message: '上传问卷失败！可能是积分不足或者网络问题！',
+    })
+  } else if (res.data.code === 200) {
+    isLoaderActive.value = false
+    showPushSurveyModal.value = false
+    return Notice({
+      notice_type: 'success',
+      message: '上传问卷成功! 扣除了您1积分',
+    })
+  }
 }
 
 const surveyJson = ref('')
@@ -115,13 +189,17 @@ onMounted(async () => {
           <div class="bottom">
             <div class="name">{{ item.surName }}</div>
             <div class="pay">
-                <template v-if="type === '我的'">
-                  <div class="buy" @click="editTemplate(item.id)">编辑</div>
-                  <div class="buy" @click="oushTemplate(item.id)">上传</div>
+                <template v-if="isShowEditAndPush(item.type) === '我的调查和360'">
+                  <div class="buy" @click="editTemplate(item)">编辑</div>
+                  <div class="buy" @click="openPushModal(item.id)">上传</div>
                 </template>
-                <template v-else>
+                <template v-else-if="isShowEditAndPush(item.type) === '市场'">
                   <div class="integral">{{ item.credit }} 积分</div>
                   <div class="buy" @click="buyTemplate(item.id)">购买</div>
+                </template>
+                <template v-else>
+                  <div class="integral">{{ item.credit }} &nbsp;</div>
+                  <div class="buy" @click="buyTemplate(item.id)"> &nbsp;</div>
                 </template>
             </div>
           </div>
@@ -144,6 +222,49 @@ onMounted(async () => {
     >
       <SurveyPreview :survey-json="surveyJson"></SurveyPreview>
     </AuDialog>
+
+    <VModal
+      :open="showPushSurveyModal"
+      actions="right"
+      title="设置问卷积分"
+      size="small"
+      @close="cancelPushSurvey"
+    >
+      <template #content>
+        <div class="is-flex">
+        <VField label="积分:" horizontal style="margin-right: 10px; ">
+        <VControl fullwidth>
+          <template v-if="false">
+            <span class="not-edit" @click="becomeEdit">{{
+              currentSurveyCredit
+            }}</span>
+          </template>
+          <template v-else>
+            <VInput
+              v-model="currentSurveyCredit"
+              type="text"
+              placeholder="请输入售卖积分"
+            />
+          </template>
+        </VControl>
+        </VField>
+        </div>
+        <!-- <VInput v-model="currentSurveyCredit"></VInput> -->
+      </template>
+      <template #action>
+        <VButton color="primary" raised @click="pushMySurvey">确定上传</VButton>
+      </template>
+    </VModal>
+    
+    <!-- 编辑问卷 -->
+    <AuDialog v-if="showDialog" title="问卷设计" :footer="false" @close="onClose">
+      <TemplateEdit
+        :template-info="templateInfo"
+        @save-template="saveTemplate"
+      ></TemplateEdit>
+    </AuDialog>
+
+
   </div>
 </template>
 <style scoped lang="scss">
@@ -154,6 +275,7 @@ onMounted(async () => {
     }
   }
 }
+
 .sur-template {
   width: 100%;
   .list-loader {

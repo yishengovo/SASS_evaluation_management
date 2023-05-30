@@ -1,9 +1,29 @@
+import type { LocationQueryValue } from 'vue-router'
+import { WizardType } from '/@src/models/wizard'
+
+interface Questions {
+  name: string
+  names: string[]
+  choices: string[]
+  type?: string
+}
+
 export interface IGetTemplate {
   pageNum: number
   pageSize: number
   name?: string | undefined
   type: '测评' | '调查' | '360度评估' | '我的'
 }
+
+export interface ISaveTemplate {
+  name: string
+  content?: string
+  type: WizardType
+  jsonPreview: string
+  surveyId?: string | LocationQueryValue[] | null
+  question: Questions[]
+}
+
 export interface Record {
   id: string
   fid: string
