@@ -1,55 +1,54 @@
 package org.jeecg.modules.survey.client.controller;
 
-import cn.hutool.core.date.DateUnit;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.IdUtil;
+import java.util.Arrays;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.query.QueryGenerator;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.github.wxpay.sdk.WXPayConstants;
-import com.github.wxpay.sdk.WXPayUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.jeecg.common.api.vo.Result;
-import org.jeecg.common.aspect.annotation.AutoLog;
-import org.jeecg.common.system.base.controller.JeecgController;
-import org.jeecg.common.system.query.QueryGenerator;
-import org.jeecg.common.system.util.JwtUtil;
-import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.modules.survey.client.entity.SurPayment;
+
 import org.jeecg.modules.survey.client.entity.SurTag;
-import org.jeecg.modules.survey.client.resp.IntegralModel;
-import org.jeecg.modules.survey.client.service.ISurPaymentService;
+import org.jeecg.modules.survey.client.req.TagQueryReq;
 import org.jeecg.modules.survey.client.service.ISurTagService;
-import org.jeecg.modules.survey.client.service.ISurTopUpService;
-import org.jeecg.modules.survey.client.utils.CommonUtil;
-import org.jeecg.modules.system.service.ISysUserService;
+import org.jeecg.common.system.base.controller.JeecgController;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.jeecg.common.aspect.annotation.AutoLog;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.util.*;
-
- /**
+/**
  * @Description: 问卷标签表
  * @Author: jeecg-boot
- * @Date:   2023-03-26
+ * @Date:   2023-03-23
  * @Version: V1.0
  */
 @Api(tags="问卷标签表")
 @RestController
-@RequestMapping("/test/surTag")
+@RequestMapping("/client/surTag")
 @Slf4j
 public class SurTagController extends JeecgController<SurTag, ISurTagService> {
 	@Autowired
 	private ISurTagService surTagService;
-	
+
+	/**
+	 * 分页列表查询
+	 * @param req
+	 * @return
+	 */
+	@AutoLog(value = "问卷标签表-分页列表查询")
+	@ApiOperation(value="问卷标签表-分页列表查询", notes="问卷标签表-分页列表查询")
+	@PostMapping(value = "/query")
+	public Result<?> queryList(@RequestBody TagQueryReq req) {
+		Page<SurTag> queryPage = surTagService.queryPage(req);
+		return Result.OK(queryPage);
+	}
+
 	/**
 	 * 分页列表查询
 	 *
@@ -59,19 +58,19 @@ public class SurTagController extends JeecgController<SurTag, ISurTagService> {
 	 * @param req
 	 * @return
 	 */
-	//@AutoLog(value = "问卷标签表-分页列表查询")
+	@AutoLog(value = "问卷标签表-分页列表查询")
 	@ApiOperation(value="问卷标签表-分页列表查询", notes="问卷标签表-分页列表查询")
 	@GetMapping(value = "/list")
 	public Result<IPage<SurTag>> queryPageList(SurTag surTag,
-								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
-								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
-								   HttpServletRequest req) {
+											   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+											   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+											   HttpServletRequest req) {
 		QueryWrapper<SurTag> queryWrapper = QueryGenerator.initQueryWrapper(surTag, req.getParameterMap());
 		Page<SurTag> page = new Page<SurTag>(pageNo, pageSize);
 		IPage<SurTag> pageList = surTagService.page(page, queryWrapper);
 		return Result.OK(pageList);
 	}
-	
+
 	/**
 	 *   添加
 	 *
@@ -85,7 +84,7 @@ public class SurTagController extends JeecgController<SurTag, ISurTagService> {
 		surTagService.save(surTag);
 		return Result.OK("添加成功！");
 	}
-	
+
 	/**
 	 *  编辑
 	 *
@@ -99,7 +98,7 @@ public class SurTagController extends JeecgController<SurTag, ISurTagService> {
 		surTagService.updateById(surTag);
 		return Result.OK("编辑成功!");
 	}
-	
+
 	/**
 	 *   通过id删除
 	 *
@@ -113,7 +112,7 @@ public class SurTagController extends JeecgController<SurTag, ISurTagService> {
 		surTagService.removeById(id);
 		return Result.OK("删除成功!");
 	}
-	
+
 	/**
 	 *  批量删除
 	 *
@@ -127,14 +126,14 @@ public class SurTagController extends JeecgController<SurTag, ISurTagService> {
 		this.surTagService.removeByIds(Arrays.asList(ids.split(",")));
 		return Result.OK("批量删除成功!");
 	}
-	
+
 	/**
 	 * 通过id查询
 	 *
 	 * @param id
 	 * @return
 	 */
-	//@AutoLog(value = "问卷标签表-通过id查询")
+	@AutoLog(value = "问卷标签表-通过id查询")
 	@ApiOperation(value="问卷标签表-通过id查询", notes="问卷标签表-通过id查询")
 	@GetMapping(value = "/queryById")
 	public Result<SurTag> queryById(@RequestParam(name="id",required=true) String id) {
@@ -145,27 +144,27 @@ public class SurTagController extends JeecgController<SurTag, ISurTagService> {
 		return Result.OK(surTag);
 	}
 
-    /**
-    * 导出excel
-    *
-    * @param request
-    * @param surTag
-    */
-    @RequestMapping(value = "/exportXls")
-    public ModelAndView exportXls(HttpServletRequest request, SurTag surTag) {
-        return super.exportXls(request, surTag, SurTag.class, "问卷标签表");
-    }
+	/**
+	 * 导出excel
+	 *
+	 * @param request
+	 * @param surTag
+	 */
+	@RequestMapping(value = "/exportXls")
+	public ModelAndView exportXls(HttpServletRequest request, SurTag surTag) {
+		return super.exportXls(request, surTag, SurTag.class, "问卷标签表");
+	}
 
-    /**
-      * 通过excel导入数据
-    *
-    * @param request
-    * @param response
-    * @return
-    */
-    @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
-    public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
-        return super.importExcel(request, response, SurTag.class);
-    }
+	/**
+	 * 通过excel导入数据
+	 *
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/importExcel", method = RequestMethod.POST)
+	public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
+		return super.importExcel(request, response, SurTag.class);
+	}
 
 }
