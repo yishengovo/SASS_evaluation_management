@@ -2688,21 +2688,26 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
 
   @Override
   public Boolean purchaseByPoint(PurchaseReq req, String tenantId) {
-    // 取得租户对象
+    // 取得用户对象
     SysTenant tenant = sysTenantMapper.selectById(tenantId);
     // 取得问卷模板对象
     Survey survey = surveyMapper.selectById(req.getSurveyId());
     // 通过模板对象的租户id拿到问卷模板制作者
     SysTenant maker = sysTenantMapper.selectById(survey.getTenantId());
     // 取用户对象
-    SysUser user = sysUserMapper.selectOne(new LambdaQueryWrapper<SysUser>()
-            .eq(SysUser::getRelTenantIds,tenantId));
+    String userName = sysUserService.getUserNameByTenantId(tenantId);
+    SysUser user = sysUserService.getUserByName(userName);
     // 取到maker用户对象
-    SysUser userMaker = sysUserMapper.selectOne(new LambdaQueryWrapper<SysUser>()
-            .eq(SysUser::getRelTenantIds,survey.getTenantId()));
-    // 判断租户积分是否足够,判断用户积分是否足够
-    if(tenant.getIntegral()<survey.getCredit() || user.getIntegral()<survey.getCredit()) return false;
-
+    String makerName = sysUserService.getUserNameByTenantId(survey.getTenantId());
+    SysUser userMaker = sysUserService.getUserByName(makerName);
+    // 判断租户积分是否足够
+    if(tenant.getIntegral()<survey.getCredit()){
+      return false;
+    }
+    // 判断用户积分是否足够
+    if (user.getIntegral()<survey.getCredit()){
+      return false;
+    }
     // 取得问卷问题
     List<SurQuestion> surQuestions = surQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestion>()
             .eq(SurQuestion::getSurveyUid, req.getSurveyId()));
@@ -2713,35 +2718,44 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
 
     // 问卷模板复制到用户问卷模板
     SurSurveyProject surSurveyProject = new SurSurveyProject();
-    BeanUtils.copyProperties(survey,surSurveyProject);
-    surSurveyProject.setSysOrgCode(survey.getOrgUid())
+    surSurveyProject.setType(survey.getType())
+            .setSurName(survey.getSurName())
+            .setSurContent(survey.getSurContent())
+            .setJsonPreview(survey.getJsonPreview())
+            .setSysOrgCode(survey.getOrgUid())
             .setTenantId(tenantId)
             .setSrcId(survey.getId());
     userSurveyMapper.insert(surSurveyProject);
 
     // 问卷问题复制到用户问卷问题
-
     //获取问卷id（通过迭代器获取）
-    /*List<SurSurveyProject> recentSurSurveyProjects = userSurveyMapper.selectList(new LambdaQueryWrapper<SurSurveyProject>()
+    List<SurSurveyProject> recentSurSurveyProjects = userSurveyMapper.selectList(new LambdaQueryWrapper<SurSurveyProject>()
             .eq(SurSurveyProject::getTenantId,tenantId));
     Iterator<SurSurveyProject> iter = recentSurSurveyProjects.iterator();
     SurSurveyProject recentSurSurveyProject =new SurSurveyProject();
     while(iter.hasNext()){
       recentSurSurveyProject = iter.next();
-    }*/
+    }
 
     for (SurQuestion surQuestion : surQuestions) {
       SurQuestionProject surQuestionProject = new SurQuestionProject();
-      BeanUtils.copyProperties(surQuestion,surQuestionProject);
-      surQuestionProject.setSurveyUid(surSurveyProject.getId())
+      surQuestionProject.setSurveyUid(recentSurSurveyProject.getId())
+              .setContent(surQuestion.getContent())
+              .setIsParent(surQuestion.getIsParent())
+              .setParentId(surQuestion.getParentId())
+              .setParentContent(surQuestion.getParentContent())
               .setSysOrgCode(surQuestion.getOrgUid())
-              .setTenantId(surSurveyProject.getTenantId());
+              .setTitle(surQuestion.getTitle())
+              .setTypeId(surQuestion.getTypeId())
+              .setDimensionId(surQuestion.getDimensionId())
+              .setRequired(surQuestion.getRequired())
+              .setTenantId(recentSurSurveyProject.getTenantId());
       userSurveyQuestionMapper.insert(surQuestionProject);
     }
 
     // 问题选项复制到用户问题选项
     List<SurQuestionProject> recentSurQuestionProjects = userSurveyQuestionMapper.selectList(new LambdaQueryWrapper<SurQuestionProject>()
-            .eq(SurQuestionProject::getSurveyUid,surSurveyProject.getId()));
+            .eq(SurQuestionProject::getSurveyUid,recentSurSurveyProject.getId()));
     String [] questionIds = new String[1000];
     int index = 0;
     for (SurQuestionProject recentSurQuestionProject: recentSurQuestionProjects) {
@@ -2752,10 +2766,12 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     int i =0;
     for (SurQuestionChoice surQuestionChoice:surQuestionChoices) {
       SurQuestionChoiceProject surQuestionChoiceProject = new SurQuestionChoiceProject();
-      BeanUtils.copyProperties(surQuestionChoice,surQuestionChoiceProject);
-      surQuestionChoiceProject.setSurveyUid(surSurveyProject.getId())
+      surQuestionChoiceProject.setSurveyUid(recentSurSurveyProject.getId())
+              .setContent(surQuestionChoice.getContent())
+              .setBasicScore(surQuestionChoice.getBasicScore())
+              .setRequired(surQuestionChoice.getRequired())
               .setSysOrgCode(surQuestionChoice.getOrgUid())
-              .setTenantId(surSurveyProject.getTenantId())
+              .setTenantId(recentSurSurveyProject.getTenantId())
               .setQuestionId(questionIds[i]);
       userSurveyChoiceMapper.insert(surQuestionChoiceProject);
       i=i+1;
@@ -2773,7 +2789,7 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     // 用户扣除积分
     user.setIntegral(user.getIntegral()-survey.getCredit());
     sysUserService.deductIntegral(user);
-    if (!("0".equals(survey.getTenantId()))){
+    if (!"0".equals(survey.getTenantId())){
       // 制作者用户加积分
       sysUserService.updateIntegral(userMaker.getId(), (int) (survey.getCredit()*0.5));
       // 制作者租户加积分
@@ -2782,7 +2798,6 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     }
     return true;
   }
-
 
   @Override
   public Boolean uploadTemplate(UploadReq req,String tenantId){
