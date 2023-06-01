@@ -1,5 +1,6 @@
 package org.jeecg.config.shiro;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -9,6 +10,7 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.checkerframework.checker.units.qual.A;
 import org.jeecg.common.api.CommonAPI;
 import org.jeecg.common.constant.CommonConstant;
 import org.jeecg.common.exception.JeecgBoot411Exception;
@@ -19,6 +21,11 @@ import org.jeecg.common.util.RedisUtil;
 import org.jeecg.common.util.SpringContextUtils;
 import org.jeecg.common.util.TokenUtils;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.config.shiro.entity.SysTenant;
+import org.jeecg.config.shiro.entity.SysUser;
+import org.jeecg.config.shiro.mapper.SysTenantMapper2;
+import org.jeecg.config.shiro.mapper.SysUserMapper2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -42,8 +49,13 @@ public class ShiroRealm extends AuthorizingRealm {
     private CommonAPI commonApi;
 
     @Lazy
-    @Resource
-    private RedisUtil redisUtil;
+    @Resource private RedisUtil redisUtil;
+
+    @Autowired
+    private SysTenantMapper2 sysTenantMapper2;
+
+    @Autowired
+    private SysUserMapper2 sysUserMapper2;
 
     /**
      * 必须重写此方法，不然Shiro会报错
@@ -135,7 +147,28 @@ public class ShiroRealm extends AuthorizingRealm {
         //判断如果使用自定义域名，该用户是否用的是正确的token
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String host = request.getServerName();
+
+        //先从redis中查
         String hostUserName = (String) redisUtil.get(host);
+        //查不到则从数据库取数据
+        //host是租户表的域名字段
+        //hostUserName 是该租户域名所在的租户数据对应的用户
+        //两个表  SysUser  SysTenant
+        //1 先通过host查SysTenant，看看是否存在这个域名  不存在则hostUserName为null
+        //2 如果存在这个域名，则通过这个域名获取租户id，再通过租户id去用户表查用户名 赋值给hostUserName
+        if (hostUserName == null) {
+            LambdaQueryWrapper<SysTenant> queryWrapperTenant = new LambdaQueryWrapper<>();
+            queryWrapperTenant.eq(SysTenant::getRealmName, host);
+            SysTenant sysTenant = sysTenantMapper2.selectOne(queryWrapperTenant);
+            if (sysTenant != null) {
+                LambdaQueryWrapper<SysUser> queryWrapperUser = new LambdaQueryWrapper<>();
+                queryWrapperUser.eq(SysUser::getRelTenantIds,sysTenant.getId());
+                hostUserName = sysUserMapper2.selectOne(queryWrapperUser).getUsername();
+            }
+        }
+
+        System.out.println("host==========================================" + host);
+        System.out.println("hostUserName==========================================" + hostUserName);
         if(host.equals("hrtools.stalent.net")||host.equals("localhost")||host.equals("hrtools.free.idcfengye.com")){
 
         }
