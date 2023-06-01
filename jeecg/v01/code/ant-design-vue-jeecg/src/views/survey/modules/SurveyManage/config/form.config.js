@@ -62,6 +62,14 @@ export const addFormConfig = {
       wrapperCol
     },
     {
+      field: 'credit',
+      type: 'input',
+      label: '问卷积分',
+      placeholder: '请输入问卷积分',
+      labelCol,
+      wrapperCol
+    },
+    {
       field: 'reportLink',
       type: 'input',
       label: '测评报告链接',
@@ -134,6 +142,14 @@ export const editFormConfig = {
         }
       ],
       rules: [{ required: true, message: '请选择问卷类型', trigger: 'blur' }],
+      labelCol,
+      wrapperCol
+    },
+    {
+      field: 'credit',
+      type: 'input',
+      label: '问卷积分',
+      placeholder: '请输入问卷积分',
       labelCol,
       wrapperCol
     },

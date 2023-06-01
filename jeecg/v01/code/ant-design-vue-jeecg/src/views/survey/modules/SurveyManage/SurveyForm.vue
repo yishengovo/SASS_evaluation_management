@@ -22,6 +22,22 @@
             </a-select>
           </a-col>
         </template> -->
+        <!-- <div class="ant-col ant-col-24">
+          <div class="ant-row ant-form-item">
+            <div class="ant-col ant-col-xs-24 ant-col-sm-5 ant-form-item-label">
+              <label title="设置积分">设置积分</label>
+            </div>
+            <div class="ant-col ant-col-xs-24 ant-col-sm-16">
+              <a-input placeholder="请输入售卖积分" />
+              <a-checkbox-group v-model="selectedTags" @change="onChange">
+                <a-col :span="6" v-for="item in tagsInfos" :key="item.value">
+                  <a-checkbox :value="item.value">{{ item.label }}</a-checkbox>
+                </a-col>
+              </a-checkbox-group>
+            </div>
+          </div>
+        </div> -->
+
         <div class="ant-col ant-col-24">
           <div class="ant-row ant-form-item">
             <div class="ant-col ant-col-xs-24 ant-col-sm-5 ant-form-item-label">
