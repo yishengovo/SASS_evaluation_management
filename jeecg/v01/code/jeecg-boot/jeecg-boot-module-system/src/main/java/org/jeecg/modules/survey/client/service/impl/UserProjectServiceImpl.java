@@ -2789,13 +2789,12 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     // 用户扣除积分
     user.setIntegral(user.getIntegral()-survey.getCredit());
     sysUserService.deductIntegral(user);
-    if (!"0".equals(survey.getTenantId())){
-      // 制作者用户加积分
-      sysUserService.updateIntegral(userMaker.getId(), (int) (survey.getCredit()*0.5));
-      // 制作者租户加积分
-      maker.setIntegral((int) ((maker.getIntegral()+survey.getCredit())*0.5));
-      sysTenantMapper.update(maker,new LambdaQueryWrapper<SysTenant>().eq(SysTenant::getId,maker.getId()));
-    }
+    // 制作者用户加积分
+    sysUserService.updateIntegral(userMaker.getId(), (int) (survey.getCredit()*0.5));
+    // 制作者租户加积分
+    maker.setIntegral((int) ((maker.getIntegral()+survey.getCredit())*0.5));
+    sysTenantMapper.update(maker,new LambdaQueryWrapper<SysTenant>().eq(SysTenant::getId,maker.getId()));
+
     return true;
   }
 

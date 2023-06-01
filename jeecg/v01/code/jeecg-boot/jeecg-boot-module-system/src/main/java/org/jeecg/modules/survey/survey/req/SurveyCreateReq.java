@@ -42,6 +42,8 @@ public class SurveyCreateReq {
     private Boolean isPublic;
     /**是否启用 1启用 0停用*/
     private Boolean isUse;
+    // 积分
+    private int credit;
     /**所属租户id*/
     private List<Integer> tenantIdList;
 }

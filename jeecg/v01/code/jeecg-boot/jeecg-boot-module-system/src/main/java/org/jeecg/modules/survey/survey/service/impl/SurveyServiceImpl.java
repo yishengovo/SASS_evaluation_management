@@ -41,9 +41,10 @@ public class SurveyServiceImpl extends ServiceImpl<SurveyMapper, Survey> impleme
     Survey survey = new Survey();
     BeanUtils.copyProperties(req, survey);
     survey.setId(null);
-    survey.setTenantId(null);
+    survey.setTenantId(String.valueOf(1));
     survey.setIsPublic(true);
     survey.setIsUse(req.getIsUse());
+    survey.setCredit(req.getCredit());
     save(survey);
     // 如果不是公共的问卷 创建问卷租户关系
     if (req.getTenantIdList() != null && !req.getTenantIdList().isEmpty()) {
