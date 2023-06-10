@@ -16,6 +16,7 @@ const api = useApi()
 
 enum surTemplateApi {
   GetTemplate = '/client/userProject/getSurveyTemplate',
+  HavingTemplate = '/client/userProject//getHavingSurveyTemplate',
   GetMyTemplate = '/client/userProject/getExclusiveSurveyTemplate',
   BuyTemplate = '/client/userProject/purchaseByPoint',
   SaveTemplate = '/client/userProject/surveyMarketSave',
@@ -24,6 +25,10 @@ enum surTemplateApi {
 
 export const saveTemplateApi = (data: ISaveTemplate): Promise<IDataType<any>> => {
   return api.post(surTemplateApi.SaveTemplate, data)
+}
+
+export const getHavingTemplateApi = () => {
+  return api.post(surTemplateApi.HavingTemplate)
 }
 
 export const getTemplateApi = (

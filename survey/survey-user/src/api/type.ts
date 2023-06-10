@@ -16,7 +16,9 @@ interface data<T> {
   success: boolean
   timestamp: number
 }
+
 export interface IDataType<T = any> {
+  config: any
   status: number
   data: data<T>
   headers: any

@@ -6,7 +6,7 @@
  * @Description: file content
 -->
 <script lang="ts" setup>
-import { getTemplateApi, buyTemplateApi, PushTemplateApi } from '/@src/api/surTemplate/surTemplate'
+import { getTemplateApi, buyTemplateApi, PushTemplateApi, getHavingTemplateApi } from '/@src/api/surTemplate/surTemplate'
 import { Record } from '/@src/api/surTemplate/type'
 import { Notice } from '/@src/components/base/au-notice/Notice'
 import type { TemplateInfo } from '/@src/api/createProject/type'
@@ -35,6 +35,8 @@ const searchName = ref('')
 const currentSurveyId = ref('')
 const currentSurveyCredit = ref()
 const currentSurveyName = ref('')
+const currentTenantId = ref('')
+const currentHavingSurvey = ref(new Set<string>())
 const showPushSurveyModal = ref(false)
 const templateData = ref<Record[]>([])
 
@@ -50,7 +52,9 @@ const getTemplate = async (searchName = '') => {
     type: props.type,
     name: searchName,
   })
-  console.log(res);
+  // console.log(res);
+  // console.log(Object.values(res.config.headers)[3]);
+  currentTenantId.value = Object.values(res.config.headers)[3] as string
   templateData.value = res.data.result.records
   total.value = res.data.result.total
   if (res.data.code !== 200) {
@@ -59,8 +63,26 @@ const getTemplate = async (searchName = '') => {
       message: '获取问卷模板失败,请稍后重试!',
     })
   }
+
+  // 调用接口，获得当前租户已经购买的问卷id集合
+  const res2 = await getHavingTemplateApi()
+  // console.log("res2==================", res2);
+  res2.data.result.forEach((item:any) => {
+    // console.log(item.id);
+    currentHavingSurvey.value.add(item)
+  })
+  // console.log("******************",currentHavingSurvey.value);
   isLoaderActive.value = false
 }
+
+// 查询当前问卷id是否已经购买过
+const isHavingSurveyById = (id: string) => {
+  // console.log("******************", id, typeof(id))
+  // console.log("===================", currentHavingSurvey.value.has(id))
+  return currentHavingSurvey.value.has(id) // true | false
+}
+
+
 // 搜索问卷模板
 const searchTemplate = async () => {
   await getTemplate(searchName.value)
@@ -71,12 +93,14 @@ const buyTemplate = async (id: string) => {
   const res = await buyTemplateApi({surveyId: id})
   // console.log(res.data);
   if (res.data.code === 500) {
+    getTemplate()
     isLoaderActive.value = false
     return Notice({
       notice_type: 'error',
       message: '购买问卷失败！可能是积分不足或者网络问题！',
     })
   } else if (res.data.code === 200) {
+    getTemplate()
     isLoaderActive.value = false
     return Notice({
       notice_type: 'success',
@@ -104,7 +128,7 @@ const editTemplate = async (item: any) => {
   showDialog.value = true
 }
 
-// 模板小卡片底部展示的三种情况
+// 问卷模板小卡片底部展示的三种情况
 function isShowEditAndPush(type: string) : string {
   if(props.type === '我的' && type === '测评') {
     return '我的测评'
@@ -129,9 +153,9 @@ const cancelPushSurvey = () => {
 // 确定上传问卷
 const pushMySurvey = () => {
   pushTemplate()
-  console.log("currentSurveyId:",currentSurveyId.value);
-  console.log("currentSurveyCredit:",currentSurveyCredit.value);
-  console.log("currentSurveyName:",currentSurveyName.value);
+  // console.log("currentSurveyId:",currentSurveyId.value);
+  // console.log("currentSurveyCredit:",currentSurveyCredit.value);
+  // console.log("currentSurveyName:",currentSurveyName.value);
 }
 
 // 上传问卷的表单校验
@@ -217,12 +241,23 @@ onMounted(async () => {
                   <div class="buy" @click="openPushModal(item.id)">上传</div>
                 </template>
                 <template v-else-if="isShowEditAndPush(item.type) === '市场'">
-                  <div class="integral">{{ item.credit }} 积分</div>
-                  <div class="buy" @click="buyTemplate(item.id)">购买</div>
+                  <template v-if="isHavingSurveyById(item.id)">
+                    <div class="integral"></div>
+                    <div class="buy">已拥有</div>
+                  </template>
+                  <template v-else-if="item.tenantId === currentTenantId">
+                    <div class="integral"></div>
+                    <div class="buy">我的</div> 
+                  </template>
+                  <template v-else>
+                    <div class="integral">{{ item.credit === 0 ? '免费' : item.credit + ' 积分'}} </div>
+                    <div class="buy" @click="buyTemplate(item.id)">购买</div> 
+                  </template>
+                  
                 </template>
                 <template v-else>
-                  <div class="integral">{{ item.credit }} &nbsp;</div>
-                  <div class="buy" @click="buyTemplate(item.id)"> &nbsp;</div>
+                  <div class="integral"> &nbsp;</div>
+                  <div class="buy"> &nbsp;</div>
                 </template>
             </div>
           </div>
