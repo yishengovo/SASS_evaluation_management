@@ -2662,6 +2662,19 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     }
 
     @Override
+    public List<String> getHavingSurveyTemplateList(String tenantId) {
+        // 查询问卷租户关系
+        List<SurSurveyTenant> surSurveyTenantList =
+                surSurveyTenantMapper.selectList(
+                        new LambdaQueryWrapper<SurSurveyTenant>().eq(SurSurveyTenant::getTenantId, tenantId));
+        //取出所有的问卷id
+        List<String> surveyIds =
+                surSurveyTenantList.stream().map(SurSurveyTenant::getSurveyId).distinct().collect(Collectors.toList());
+
+        return surveyIds;
+    }
+
+    @Override
     public PageResp<Survey> getExclusiveSurveyTemplateList(ProjectAdvancedQueryReq req, String tenantId) {
         // 专属该租户的问卷
         List<Survey> exclusive = new ArrayList<>();
