@@ -134,29 +134,46 @@ const pushMySurvey = () => {
   console.log("currentSurveyName:",currentSurveyName.value);
 }
 
+// 上传问卷的表单校验
+const pushFormValidation = () => {
+  console.log(currentSurveyCredit.value.string);
+  if(currentSurveyName.value === '') return Notice({
+      notice_type: 'warning',
+      message: '请填写问卷名称！',
+    })
+  else if(currentSurveyCredit.value === '') return Notice({
+    notice_type: 'warning',
+    message:'请填写问卷积分！'
+  })
+  return true
+}
+
 // 上传我的问卷模板
 const pushTemplate = async () => {
-  isLoaderActive.value = true
-  
-  const res = await PushTemplateApi({surveyProjectId: currentSurveyId.value, 
-                                     credit: parseInt(currentSurveyCredit.value),
-                                     surName: currentSurveyName.value}
-                                   )
-  console.log(res.data);
-  if (res.data.code === 500) {
-    isLoaderActive.value = false
-    return Notice({
-      notice_type: 'error',
-      message: '上传问卷失败！可能是积分不足或者网络问题！',
-    })
-  } else if (res.data.code === 200) {
-    isLoaderActive.value = false
+  if(pushFormValidation() === true) {
+    isLoaderActive.value = true
     showPushSurveyModal.value = false
-    return Notice({
-      notice_type: 'success',
-      message: '上传问卷成功! 扣除了您1积分',
-    })
+    const res = await PushTemplateApi({surveyProjectId: currentSurveyId.value, 
+                                     credit: parseInt(currentSurveyCredit.value),
+                                     surName: currentSurveyName.value})
+    console.log(res.data);
+    if (res.data.code === 500) {
+      isLoaderActive.value = false
+      return Notice({
+        notice_type: 'warning',
+        message: '上传问卷失败！请检查您的积分余额和网络是否正常！',
+      })
+    } else if (res.data.code === 200) {
+      isLoaderActive.value = false
+      showPushSurveyModal.value = false
+      return Notice({
+        notice_type: 'success',
+        message: '上传问卷成功! 扣除了您1积分',
+      })
+    }
   }
+  // console.log("==================================",pushFormValidation()); // undefined | true
+  
 }
 
 const surveyJson = ref('')
@@ -267,7 +284,7 @@ onMounted(async () => {
             <template v-else>
               <VInput
                 v-model="currentSurveyCredit"
-                type="text"
+                type="number"
                 placeholder="请输入售卖积分"
               />
             </template>
