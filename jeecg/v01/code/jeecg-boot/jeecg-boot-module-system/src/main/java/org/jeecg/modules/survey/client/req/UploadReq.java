@@ -8,9 +8,10 @@ import lombok.Data;
 public class UploadReq {
     // 用户问卷模板ID
     private String surveyProjectId;
+    // 用户自定义的问卷模板名字
+    private String surName;
     //用户问卷模板积分（要卖多少积分）
     private int credit;
     //上传问卷扣积分
     private int upCredit;
-
 }
