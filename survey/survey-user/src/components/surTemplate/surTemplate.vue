@@ -34,6 +34,7 @@ const isLoaderActive = ref(false)
 const searchName = ref('')
 const currentSurveyId = ref('')
 const currentSurveyCredit = ref()
+const currentSurveyName = ref('')
 const showPushSurveyModal = ref(false)
 const templateData = ref<Record[]>([])
 
@@ -118,6 +119,7 @@ function isShowEditAndPush(type: string) : string {
 const openPushModal = (id: string) => {
   currentSurveyId.value = id
   currentSurveyCredit.value = ''
+  currentSurveyName.value = ''
   showPushSurveyModal.value = true
 }
 // 关闭上传问卷的弹窗
@@ -129,13 +131,17 @@ const pushMySurvey = () => {
   pushTemplate()
   console.log("currentSurveyId:",currentSurveyId.value);
   console.log("currentSurveyCredit:",currentSurveyCredit.value);
+  console.log("currentSurveyName:",currentSurveyName.value);
 }
 
 // 上传我的问卷模板
 const pushTemplate = async () => {
   isLoaderActive.value = true
   
-  const res = await PushTemplateApi({surveyProjectId: currentSurveyId.value, credit: parseInt(currentSurveyCredit.value)})
+  const res = await PushTemplateApi({surveyProjectId: currentSurveyId.value, 
+                                     credit: parseInt(currentSurveyCredit.value),
+                                     surName: currentSurveyName.value}
+                                   )
   console.log(res.data);
   if (res.data.code === 500) {
     isLoaderActive.value = false
@@ -226,27 +232,46 @@ onMounted(async () => {
     <VModal
       :open="showPushSurveyModal"
       actions="right"
-      title="设置问卷积分"
+      title="设置问卷"
       size="small"
       @close="cancelPushSurvey"
     >
       <template #content>
-        <div class="is-flex">
-        <VField label="积分:" horizontal style="margin-right: 10px; ">
-        <VControl fullwidth>
-          <template v-if="false">
-            <span class="not-edit" @click="becomeEdit">{{
-              currentSurveyCredit
-            }}</span>
-          </template>
-          <template v-else>
-            <VInput
-              v-model="currentSurveyCredit"
-              type="text"
-              placeholder="请输入售卖积分"
-            />
-          </template>
-        </VControl>
+        <div style="margin-right:1.8vw;">
+        <VField label="名称:" horizontal>
+          <VControl fullwidth>
+            <template v-if="false">
+              <span class="not-edit" @click="becomeEdit">{{
+                currentSurveyName
+              }}</span>
+            </template>
+            <template v-else>
+              <VInput
+                v-model="currentSurveyName"
+                type="text"
+                placeholder="请输入问卷名称"
+              />
+            </template>
+          </VControl>
+        </VField>
+        </div>
+        <br>
+        <div style="margin-right:1.8vw;">
+        <VField label="积分:" horizontal>
+          <VControl fullwidth>
+            <template v-if="false">
+              <span class="not-edit" @click="becomeEdit">{{
+                currentSurveyCredit
+              }}</span>
+            </template>
+            <template v-else>
+              <VInput
+                v-model="currentSurveyCredit"
+                type="text"
+                placeholder="请输入售卖积分"
+              />
+            </template>
+          </VControl>
         </VField>
         </div>
         <!-- <VInput v-model="currentSurveyCredit"></VInput> -->
