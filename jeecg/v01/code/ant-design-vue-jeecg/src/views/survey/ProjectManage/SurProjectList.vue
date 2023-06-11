@@ -57,7 +57,7 @@
           </template> -->
 
           <a-col :md="6" :sm="8">
-            <span style="float: left;overflow: hidden;" class="table-page-search-submitButtons">
+            <span style="float: left; overflow: hidden" class="table-page-search-submitButtons">
               <a-button type="primary" @click="searchQuery" icon="search">查询</a-button>
               <a-button type="primary" @click="searchReset" icon="reload" style="margin-left: 8px">重置</a-button>
               <a @click="handleToggleSearch" style="margin-left: 8px">
@@ -94,7 +94,7 @@
         <a-menu slot="overlay">
           <a-menu-item key="1" @click="batchDel"><a-icon type="delete" />删除</a-menu-item>
         </a-menu>
-        <a-button style="margin-left: 8px"> 批量操作 <a-icon type="down"/></a-button>
+        <a-button style="margin-left: 8px"> 批量操作 <a-icon type="down" /></a-button>
       </a-dropdown>
     </div>
     <!-- 模式 -->
@@ -131,7 +131,7 @@
                     <a-tag color="#5190de" class="type" v-if="record.type === '360度评估'">
                       {{ record.type }}
                     </a-tag>
-                    <div class="title ">
+                    <div class="title">
                       <a-tooltip>
                         <template slot="title">
                           {{ record.projectName }}
@@ -155,18 +155,18 @@
                 </div>
                 <div class="btns">
                   <span class="btn-item">
-                    <a-icon type="edit" style="color: #1890ff; margin-right:2px" />
+                    <a-icon type="edit" style="color: #1890ff; margin-right: 2px" />
                     <a @click="handleEdit(record)">编辑</a>
                   </span>
 
                   <span class="btn-item">
-                    <a-icon type="setting" style="color: #1890ff; margin-right:2px" />
+                    <a-icon type="setting" style="color: #1890ff; margin-right: 2px" />
                     <a @click="handleProjectSetting(record)">设置</a>
                   </span>
 
                   <span class="btn-item">
                     <a-dropdown placement="topLeft">
-                      <a class="ant-dropdown-link">更多 <a-icon type="down"/></a>
+                      <a class="ant-dropdown-link">更多 <a-icon type="down" /></a>
                       <a-menu slot="overlay">
                         <a-menu-item>
                           <a @click="handleCollectView(record)">收集情况</a>
@@ -182,6 +182,22 @@
                         </a-menu-item>
                         <a-menu-item>
                           <a @click="handleDetail(record)">详情</a>
+                        </a-menu-item>
+                        <a-menu-item>
+                          <a-popconfirm
+                            title="确定发布吗?"
+                            @confirm="() => handleIsPublic(record)"
+                            v-show="!record.isPublish"
+                          >
+                            <a>发布</a>
+                          </a-popconfirm>
+                          <a-popconfirm
+                            title="确定取消发布吗?"
+                            @confirm="() => handleIsPublic(record)"
+                            v-show="record.isPublish"
+                          >
+                            <a style="color: #ff6500">取消发布</a>
+                          </a-popconfirm>
                         </a-menu-item>
                         <a-menu-item>
                           <a-popconfirm title="确定删除吗?" @confirm="() => handleDelete(record.id)">
@@ -275,7 +291,7 @@
             <a @click="handleStatisticalAnalysis(record)">统计&分析</a>
             <a-divider type="vertical" />
             <a-dropdown>
-              <a class="ant-dropdown-link">更多 <a-icon type="down"/></a>
+              <a class="ant-dropdown-link">更多 <a-icon type="down" /></a>
               <a-menu slot="overlay">
                 <a-menu-item>
                   <a @click="handleDataScreen(record)">数据大屏</a>
@@ -504,7 +520,7 @@ export default {
     EvaluationSystem,
     SurveyAnalysis,
     AuDialog,
-    StatisticalAnalysis
+    StatisticalAnalysis,
   },
   props: {
     colLayout: {
@@ -514,9 +530,9 @@ export default {
         lg: 8, // ≥1200px
         md: 12, // ≥992px
         sm: 16, // ≥768px
-        xs: 24 // <768px
-      })
-    }
+        xs: 24, // <768px
+      }),
+    },
   },
   data() {
     return {
@@ -562,7 +578,7 @@ export default {
         },
         showQuickJumper: true,
         showSizeChanger: true,
-        total: 0
+        total: 0,
       },
       collectLoading: false,
       collectVisible: false,
@@ -577,7 +593,7 @@ export default {
         {
           title: '项目名称',
           align: 'center',
-          dataIndex: 'projectName'
+          dataIndex: 'projectName',
         },
         // {
         //   title: '项目负责人',
@@ -588,23 +604,23 @@ export default {
         {
           title: '项目类型',
           align: 'center',
-          dataIndex: 'type'
+          dataIndex: 'type',
         },
         {
           title: '发布状态',
           align: 'center',
           dataIndex: 'isPublish',
-          scopedSlots: { customRender: 'publish' }
+          scopedSlots: { customRender: 'publish' },
         },
         {
           title: '创建时间',
           align: 'center',
-          dataIndex: 'createTime'
+          dataIndex: 'createTime',
         },
         {
           title: '修改时间',
           align: 'center',
-          dataIndex: 'updateTime'
+          dataIndex: 'updateTime',
         },
         {
           title: '操作',
@@ -612,8 +628,8 @@ export default {
           align: 'center',
           fixed: 'right',
           width: 147,
-          scopedSlots: { customRender: 'action' }
-        }
+          scopedSlots: { customRender: 'action' },
+        },
       ],
       url: {
         list: '/survey/surProject/list',
@@ -623,22 +639,23 @@ export default {
         importExcelUrl: 'survey/surProject/importExcel',
         collectList: '/survey/surProject/getAnalysis',
         changeProjectState: '/survey/surProject/publish',
+        changeProjectIsPubilc: '/client/userProject/changeStatus',
         devQRCodeUrl: 'http://127.0.0.1:3000/survey/library/',
-        prodQRCodeUrl: 'http://hrtools.stalent.net:27521/survey/library/'
+        prodQRCodeUrl: 'http://hrtools.stalent.net:27521/survey/library/',
       },
       dictOptions: {},
       superFieldList: [],
       // 图片
-      templatePng
+      templatePng,
     }
   },
   created() {
     this.getSuperFieldList()
   },
   computed: {
-    importExcelUrl: function() {
+    importExcelUrl: function () {
       return `${window._CONFIG['domianURL']}/${this.url.importExcelUrl}`
-    }
+    },
   },
   methods: {
     // 条件查询
@@ -674,6 +691,26 @@ export default {
       this.loadData({ type: 'card', params: { page: current, pageSize: size } })
       console.log(current, size)
     },
+    // 发布与取消发布
+    handleIsPublic(record) {
+      const _this = this
+      axios({
+        method: 'post',
+        url: _this.url.changeProjectIsPubilc,
+        data: {
+          id: record.id,
+          isPublish: !record.isPublish,
+        },
+      }).then(res=>{
+        if (res.success) {
+          _this.$message.success(res.message)
+          _this.loadData()
+        }else{
+          _this.$message.success(res.message)
+        }
+      })
+      
+    },
     // 处理问卷发布
     handleRelease(record) {
       console.log(record)
@@ -694,8 +731,8 @@ export default {
               method: 'post',
               url: _this.url.changeProjectState,
               data: {
-                id: record.id
-              }
+                id: record.id,
+              },
             })
             // 生成链接
             // let url = `${window._CONFIG['domianURL']}/survey/library/?creatorId=${record.id}`
@@ -726,7 +763,7 @@ export default {
             _this.value = url
             _this.visible = true
           },
-          onCancel() {}
+          onCancel() {},
         })
       } else {
         // 生成链接
@@ -769,7 +806,7 @@ export default {
       const { result: res } = await axios({
         method: 'post',
         url: this.url.collectList,
-        data
+        data,
       })
       this.collectPagination.total = res.users.total
       this.currentProjectPeople = res.users.total
@@ -946,8 +983,8 @@ export default {
       fieldList.push({ type: 'string', value: 'projectName', text: '项目名称', dictCode: '' })
       fieldList.push({ type: 'string', value: 'leader', text: '项目负责人', dictCode: '' })
       this.superFieldList = fieldList
-    }
-  }
+    },
+  },
 }
 </script>
 <style scoped lang="less">

@@ -17,7 +17,6 @@ declare module '@vue/runtime-core' {
     ComponentsMobileSubsidebar: typeof import('./src/layouts/mobile-subsidebars/ComponentsMobileSubsidebar.vue')['default']
     ContactForm: typeof import('./src/components/contactForm/index.vue')['default']
     ContactGroup: typeof import('./src/components/contactGroup/index.vue')['default']
-    copy: typeof import('./src/components/survey/creator/SurveyCreator copy.vue')['default']
     DashboardsMobileSubsidebar: typeof import('./src/layouts/mobile-subsidebars/DashboardsMobileSubsidebar.vue')['default']
     DashboardsSubsidebar: typeof import('./src/layouts/sidebar-subsidebar/DashboardsSubsidebar.vue')['default']
     DisableEle: typeof import('./src/components/disableEle.vue')['default']
