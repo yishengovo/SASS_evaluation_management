@@ -303,6 +303,22 @@
                   <a @click="handleDetail(record)">详情</a>
                 </a-menu-item>
                 <a-menu-item>
+                          <a-popconfirm
+                            title="确定发布吗?"
+                            @confirm="() => handleIsPublic(record)"
+                            v-show="!record.isPublish"
+                          >
+                            <a>发布</a>
+                          </a-popconfirm>
+                          <a-popconfirm
+                            title="确定取消发布吗?"
+                            @confirm="() => handleIsPublic(record)"
+                            v-show="record.isPublish"
+                          >
+                            <a style="color: #ff6500">取消发布</a>
+                          </a-popconfirm>
+                        </a-menu-item>
+                <a-menu-item>
                   <a-popconfirm title="确定删除吗?" @confirm="() => handleDelete(record.id)">
                     <a>删除</a>
                   </a-popconfirm>
