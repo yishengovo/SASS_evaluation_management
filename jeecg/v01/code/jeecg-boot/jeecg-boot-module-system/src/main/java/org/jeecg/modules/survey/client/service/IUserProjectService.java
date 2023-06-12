@@ -120,6 +120,8 @@ public interface IUserProjectService extends IService<UserProject> {
   List<Survey> getEvaluationSurveyList(String projectId);
   // 查询问卷模板
   PageResp<Survey> getSurveyTemplateList(ProjectAdvancedQueryReq req, String tenantId);
+  // 查询用户购买的问卷模板的原问卷的信息
+  PageResp<Survey> getMySurveyTemplateList(ProjectAdvancedQueryReq req, String tenantId);
   //查询当前租户购买过的问卷集合
   List<String> getHavingSurveyTemplateList(String tenantId);
   // 查询租户自己的问卷模板

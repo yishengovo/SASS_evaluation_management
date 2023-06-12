@@ -2662,6 +2662,38 @@ public class UserProjectServiceImpl extends ServiceImpl<UserProjectMapper, UserP
     }
 
     @Override
+    public PageResp<Survey> getMySurveyTemplateList(ProjectAdvancedQueryReq req, String tenantId) {
+        List<String> ids = getHavingSurveyTemplateList(tenantId);
+        List<Survey> surveyList = new ArrayList<>();
+        for (String id : ids) {
+            LambdaQueryWrapper<Survey> queryAllWrapper =
+                    new LambdaQueryWrapper<Survey>()
+                            .eq(Survey::getId, id)
+                            .eq(Survey::getIsPublic, true)
+                            .eq(Survey::getIsUse, true)
+                            .eq(Survey::getType, req.getType());
+            if (req.getName() != null && !StringUtils.isEmpty(req.getName())) {
+                queryAllWrapper.like(Survey::getSurName, req.getName());
+            }
+            Survey survey = surveyMapper.selectOne(queryAllWrapper);
+            if (survey != null) {
+                surveyList.add(survey);
+            }
+        }
+
+        // 对surveyList进行分页
+        List<Survey> collect =
+                surveyList.stream()
+                        .skip((req.getPageNum() - 1) * req.getPageSize())
+                        .limit(req.getPageSize())
+                        .collect(Collectors.toList());
+        PageResp<Survey> surveyPageResp = new PageResp<>();
+        surveyPageResp.setRecords(collect);
+        surveyPageResp.setTotal(surveyList.size());
+        return surveyPageResp;
+    }
+
+    @Override
     public List<String> getHavingSurveyTemplateList(String tenantId) {
         // 查询问卷租户关系
         List<SurSurveyTenant> surSurveyTenantList =
