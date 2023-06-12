@@ -10,6 +10,7 @@ import { useWizard } from '/@src/stores/wizard'
 import { useNotyf } from '/@src/composable/useNotyf'
 import QuestionList from './question/question-list.vue'
 import { Notice } from '/@src/components/base/au-notice/Notice'
+import ProjectSurveyand360 from './project-surveyand360.vue'
 import ProjectAssessment from './project-assessment.vue'
 
 const isDisable = localStorage.getItem('isView') === 'view'
@@ -75,6 +76,13 @@ const onClose = () => {
 function createEmptySurvey() {
   showDialog.value = true
 }
+
+// 从模板引用创建问卷
+function createTemplateSurvey(jsonPreview: string) {
+
+  projectInfo.jsonPreview = jsonPreview
+  showDialog.value = true
+}
 // 编辑问卷
 async function editSurvey() {
   await getSurevyInfo()
@@ -135,7 +143,7 @@ wizard.setStep({
     }
   },
 })
-const sort = ['公众调查', '心里调查', '职业调查', '大学生调查']
+// const sort = ['公众调查', '心里调查', '职业调查', '大学生调查']
 const currentTemp = ref(0)
 const changeTemp = (index: number) => {
   currentTemp.value = index
@@ -168,8 +176,8 @@ const changeTemp = (index: number) => {
             </VCard>
           </div>
 
-          <div class="use-temp">使用问卷模板</div>
-          <div class="temp-title">
+          <!-- <div class="use-temp">使用问卷模板</div> -->
+          <!-- <div class="temp-title">
             <div class="sort">
               <template v-for="(item, index) in sort" :key="item"
                 ><span
@@ -186,7 +194,8 @@ const changeTemp = (index: number) => {
                 </VControl>
               </VField>
             </div>
-          </div>
+          </div> -->
+          <ProjectSurveyand360 @afterOK="createTemplateSurvey"></ProjectSurveyand360>
         </template>
         <template v-if="projectInfo.id && projectId">
           <VCard class="card">
