@@ -979,6 +979,15 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
         return super.exportXls(request, userProject, UserProject.class, "用户端项目表");
     }
 
+    @RequestMapping(value = "/exportIncompleteUsers")
+    public void exportIncompleteUsers(HttpServletResponse response, String projectId) {
+        try {
+            excelService.exportIncompleteUsers(response,projectId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * 通过excel导入数据
      *

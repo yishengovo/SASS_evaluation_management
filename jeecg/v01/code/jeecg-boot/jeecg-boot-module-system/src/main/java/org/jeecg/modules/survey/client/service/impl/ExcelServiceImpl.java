@@ -5,20 +5,27 @@ import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.excel.write.metadata.WriteTable;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.jeecg.modules.survey.client.req.ExportReq;
+import org.jeecg.modules.survey.client.resp.IncompleteUser;
 import org.jeecg.modules.survey.client.service.ExcelService;
 import org.jeecg.modules.survey.survey.entity.*;
+import org.jeecg.modules.survey.survey.mapper.SurUserMapper;
 import org.jeecg.modules.survey.survey.service.*;
+import org.jeecgframework.poi.excel.ExcelExportUtil;
+import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class ExcelServiceImpl implements ExcelService {
+    @Autowired private SurUserMapper userMapper;
     @Autowired
     private ISurProjectService surProjectService;
     @Autowired
@@ -215,4 +222,33 @@ public class ExcelServiceImpl implements ExcelService {
     }
 
     //查询
+    @Override
+    public void exportIncompleteUsers(HttpServletResponse response, String projectId) throws Exception {
+        // 查找sur_user表
+        List<SurUser> surUsers = userMapper.selectList(new LambdaQueryWrapper<SurUser>()
+                .eq(SurUser::getProjectId,projectId)
+                .eq(SurUser::getIsFinished,false));
+        List<String> names = surUsers.stream().map(SurUser::getName).distinct().collect(Collectors.toList());
+
+
+        List<IncompleteUser> incompleteUsers = new ArrayList<>();
+        names.forEach(
+                name->{
+                    IncompleteUser incompleteUser = new IncompleteUser();
+                    incompleteUser.setName(name);
+                    incompleteUsers.add(incompleteUser);
+                }
+        );
+
+        response.setHeader("content-disposition","attachment;fileName="+ URLEncoder.encode("未完成用户.xlsx","UTF-8"));
+        response.setContentType("application/vnd.ms-excel");
+        Workbook workbook = ExcelExportUtil.exportExcel(
+                new ExportParams("未完成名单", "第一页"), IncompleteUser.class, incompleteUsers);
+
+        ServletOutputStream outputStream = response.getOutputStream();
+        workbook.write(outputStream);
+        outputStream.close();
+        workbook.close();
+
+    }
 }
