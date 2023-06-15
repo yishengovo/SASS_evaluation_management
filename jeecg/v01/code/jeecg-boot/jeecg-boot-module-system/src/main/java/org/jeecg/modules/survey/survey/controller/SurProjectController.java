@@ -3,6 +3,7 @@ package org.jeecg.modules.survey.survey.controller;
 import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -25,6 +26,9 @@ import org.jeecg.modules.survey.survey.dto.DashBordDto;
 import org.jeecg.modules.survey.survey.dto.DataScreenDto;
 import org.jeecg.modules.survey.survey.dto.ProjectResultDto;
 import org.jeecg.modules.survey.survey.entity.*;
+import org.jeecg.modules.survey.survey.mapper.SurProjectSurveyMapper;
+import org.jeecg.modules.survey.survey.mapper.SurSurveyProjectMapper;
+import org.jeecg.modules.survey.survey.mapper.SurveyMapper;
 import org.jeecg.modules.survey.survey.req.*;
 import org.jeecg.modules.survey.survey.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +55,8 @@ public class SurProjectController extends JeecgController<SurProject, ISurProjec
   @Autowired private ISurEvaluationRelationshipService evaluationRelationshipService;
   @Autowired private ISurSurveyProjectService surveyProjectService;
   @Autowired private ISurEvaluationUserService evaluationUserService;
+  @Autowired private SurProjectSurveyMapper surProjectSurveyMapper;
+  @Autowired private SurSurveyProjectMapper surSurveyProjectMapper;
 
   @AutoLog(value = "返回问卷的每个题目的统计信息")
   @ApiOperation(value = "返回问卷的每个题目的统计信息", notes = "返回问卷的每个题目的统计信息")
@@ -279,15 +285,25 @@ public class SurProjectController extends JeecgController<SurProject, ISurProjec
     return Result.error("新建失败");
   }
 
-  @AutoLog(value = "问卷项目表-设置问卷")
-  @ApiOperation(value = "问卷项目表-设置问卷", notes = "问卷项目表-设置问卷")
-  @PostMapping(value = "/setSurvey")
-  public Result<?> addSurvey(@RequestBody SetProjectSurveyReq req) {
-    if (surProjectService.setSurvey(req)) {
-      return Result.OK("设置成功!");
-    }
-    return Result.error("设置失败");
+//  @AutoLog(value = "问卷项目表-设置问卷")
+//  @ApiOperation(value = "问卷项目表-设置问卷", notes = "问卷项目表-设置问卷")
+//  @PostMapping(value = "/setSurvey")
+//  public Result<?> addSurvey(@RequestBody SetProjectSurveyReq req) {
+//    if (surProjectService.setSurvey(req)) {
+//      return Result.OK("设置成功!");
+//    }
+//    return Result.error("设置失败");
+//  }
+@AutoLog(value = "问卷项目表-设置问卷")
+@ApiOperation(value = "问卷项目表-设置问卷", notes = "问卷项目表-设置问卷")
+@PostMapping(value = "/setSurvey")
+public Result<?> addSurvey(@RequestBody SetProjectSurveyReq req) {
+  if (surProjectService.setSurvey(req)) {
+    return Result.OK("设置成功!");
   }
+  return Result.error("设置失败");
+}
+
 
   /**
    * 编辑用户 0
@@ -461,6 +477,82 @@ public class SurProjectController extends JeecgController<SurProject, ISurProjec
     return Result.OK("批量删除成功!");
   }
 
+//  /**
+//   * 通过id查询
+//   *
+//   * @param id
+//   * @return
+//   */
+//  // @AutoLog(value = "问卷项目表-通过id查询")
+//  @ApiOperation(value = "问卷项目表-通过id查询", notes = "问卷项目表-通过id查询")
+//  @GetMapping(value = "/queryById")
+//  public Result<Map<String, Object>> queryById(
+//      @RequestParam(name = "id", required = true) String id,
+//      @RequestParam("pageNum") Integer pageNum,
+//      @RequestParam("pageSize") Integer pageSize) {
+//    SurProject surProject = surProjectService.getById(id);
+//    // 将json转换为list
+//    String rowKeysJson = surProject.getRowKeys();
+//    List<String> rowKeys = JSON.parseArray(rowKeysJson, String.class);
+//    // 获取userRowKeys
+//    String userRowKeysJson = surProject.getUserRowKeys();
+//    List<String> userRowKeys = new ArrayList<>();
+//    if (userRowKeysJson != null) {
+//      userRowKeys = JSON.parseArray(userRowKeysJson, String.class);
+//    }
+//    // 查询出对应的用户列表
+//    //        List<String> userId = projectUserService.list(new
+//    // LambdaQueryWrapper<SurProjectUser>().eq(SurProjectUser::getProjectId,
+//    // surProject.getId())).stream().map(SurProjectUser::getUserId).collect(Collectors.toList());
+//    List<String> userId =
+//        userService
+//            .list(new LambdaQueryWrapper<SurUser>().eq(SurUser::getProjectId, surProject.getId()))
+//            .stream()
+//            .map(SurUser::getId)
+//            .collect(Collectors.toList());
+//    Page<SurUser> surUserPage;
+//    Page<SurUser> depUserPage;
+//    if (!userId.isEmpty()) {
+//      surUserPage =
+//          userService.page(
+//              new Page<>(pageNum, pageSize),
+//              new LambdaQueryWrapper<SurUser>().in(SurUser::getId, userId).eq(SurUser::getType, 1));
+//      // 查出对应的部门用户列表
+//      depUserPage =
+//          userService.page(
+//              new Page<>(pageNum, pageSize),
+//              new LambdaQueryWrapper<SurUser>().in(SurUser::getId, userId).eq(SurUser::getType, 2));
+//    } else {
+//      surUserPage = new Page<>();
+//      depUserPage = new Page<>();
+//    }
+//    Map<String, Object> data = new HashMap<>();
+//    // 查询出对应的问卷模板
+//    //        SurProjectSurvey surProjectSurvey = projectSurveyService.getOne(new
+//    // LambdaQueryWrapper<SurProjectSurvey>().eq(SurProjectSurvey::getProjectId,
+//    // surProject.getId()));
+//    Survey survey =
+//        surveyService.getOne(
+//            new LambdaQueryWrapper<Survey>().eq(Survey::getId, surProject.getSurveySrcId()));
+//    data.put("survey", survey);
+//    // 查询是否有复制好的问卷
+//    SurSurveyProject copySurvey =
+//        surveyProjectService.getOne(
+//            new LambdaQueryWrapper<SurSurveyProject>()
+//                .eq(SurSurveyProject::getId, surProject.getSurveyCurrentId()));
+//    data.put("copy_survey", copySurvey);
+//    if (surProject == null) {
+//      return Result.error("未找到对应数据");
+//    }
+//
+//    data.put("project", surProject);
+//    data.put("rowKeys", rowKeys);
+//    data.put("user", surUserPage);
+//    data.put("depUser", depUserPage);
+//    data.put("userRowKeys", userRowKeys);
+//    return Result.OK(data);
+//  }
+
   /**
    * 通过id查询
    *
@@ -470,11 +562,23 @@ public class SurProjectController extends JeecgController<SurProject, ISurProjec
   // @AutoLog(value = "问卷项目表-通过id查询")
   @ApiOperation(value = "问卷项目表-通过id查询", notes = "问卷项目表-通过id查询")
   @GetMapping(value = "/queryById")
-  public Result<Map<String, Object>> queryById(
-      @RequestParam(name = "id", required = true) String id,
-      @RequestParam("pageNum") Integer pageNum,
-      @RequestParam("pageSize") Integer pageSize) {
+  public Result<?> queryById(
+          @RequestParam(name = "id", required = true) String id,
+          @RequestParam("pageNum") Integer pageNum,
+          @RequestParam("pageSize") Integer pageSize) {
     SurProject surProject = surProjectService.getById(id);
+    List<SurProjectSurvey> surProjectSurveys = surProjectSurveyMapper.selectList(new LambdaQueryWrapper<SurProjectSurvey>()
+            .eq(SurProjectSurvey::getProjectId,surProject.getId()));
+    List<SurSurveyProject> surveyProjectList = new ArrayList<SurSurveyProject>();
+//    System.out.println("======================"+surProjectSurveys); 存在数据
+    for (SurProjectSurvey surProjectSurvey : surProjectSurveys) {
+//      System.out.println("============="+surProjectSurvey);
+      SurSurveyProject surSurveyProject = surSurveyProjectMapper.selectOne(new LambdaQueryWrapper<SurSurveyProject>()
+              .eq(SurSurveyProject::getId,surProjectSurvey.getSurveyId()));
+      surveyProjectList.add(surSurveyProject);
+
+    }
+
     // 将json转换为list
     String rowKeysJson = surProject.getRowKeys();
     List<String> rowKeys = JSON.parseArray(rowKeysJson, String.class);
@@ -489,46 +593,47 @@ public class SurProjectController extends JeecgController<SurProject, ISurProjec
     // LambdaQueryWrapper<SurProjectUser>().eq(SurProjectUser::getProjectId,
     // surProject.getId())).stream().map(SurProjectUser::getUserId).collect(Collectors.toList());
     List<String> userId =
-        userService
-            .list(new LambdaQueryWrapper<SurUser>().eq(SurUser::getProjectId, surProject.getId()))
-            .stream()
-            .map(SurUser::getId)
-            .collect(Collectors.toList());
+            userService
+                    .list(new LambdaQueryWrapper<SurUser>().eq(SurUser::getProjectId, surProject.getId()))
+                    .stream()
+                    .map(SurUser::getId)
+                    .collect(Collectors.toList());
     Page<SurUser> surUserPage;
     Page<SurUser> depUserPage;
     if (!userId.isEmpty()) {
       surUserPage =
-          userService.page(
-              new Page<>(pageNum, pageSize),
-              new LambdaQueryWrapper<SurUser>().in(SurUser::getId, userId).eq(SurUser::getType, 1));
+              userService.page(
+                      new Page<>(pageNum, pageSize),
+                      new LambdaQueryWrapper<SurUser>().in(SurUser::getId, userId).eq(SurUser::getType, 1));
       // 查出对应的部门用户列表
       depUserPage =
-          userService.page(
-              new Page<>(pageNum, pageSize),
-              new LambdaQueryWrapper<SurUser>().in(SurUser::getId, userId).eq(SurUser::getType, 2));
+              userService.page(
+                      new Page<>(pageNum, pageSize),
+                      new LambdaQueryWrapper<SurUser>().in(SurUser::getId, userId).eq(SurUser::getType, 2));
     } else {
       surUserPage = new Page<>();
       depUserPage = new Page<>();
     }
+
     Map<String, Object> data = new HashMap<>();
     // 查询出对应的问卷模板
     //        SurProjectSurvey surProjectSurvey = projectSurveyService.getOne(new
     // LambdaQueryWrapper<SurProjectSurvey>().eq(SurProjectSurvey::getProjectId,
     // surProject.getId()));
-    Survey survey =
-        surveyService.getOne(
-            new LambdaQueryWrapper<Survey>().eq(Survey::getId, surProject.getSurveySrcId()));
-    data.put("survey", survey);
-    // 查询是否有复制好的问卷
-    SurSurveyProject copySurvey =
-        surveyProjectService.getOne(
-            new LambdaQueryWrapper<SurSurveyProject>()
-                .eq(SurSurveyProject::getId, surProject.getSurveyCurrentId()));
-    data.put("copy_survey", copySurvey);
+//    Survey survey =
+//            surveyService.getOne(
+//                    new LambdaQueryWrapper<Survey>().eq(Survey::getId, surProject.getSurveySrcId()));
+    data.put("surveyProjectList", surveyProjectList);
+//    // 查询是否有复制好的问卷
+//    SurSurveyProject copySurvey =
+//            surveyProjectService.getOne(
+//                    new LambdaQueryWrapper<SurSurveyProject>()
+//                            .eq(SurSurveyProject::getId, surProject.getSurveyCurrentId()));
+//    data.put("copy_survey", copySurvey);
     if (surProject == null) {
       return Result.error("未找到对应数据");
     }
-
+//
     data.put("project", surProject);
     data.put("rowKeys", rowKeys);
     data.put("user", surUserPage);

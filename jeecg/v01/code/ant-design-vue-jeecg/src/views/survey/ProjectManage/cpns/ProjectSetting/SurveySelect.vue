@@ -8,7 +8,7 @@
         :dataSource="dataSource"
         :columns="tableConfig.surveySelectColumns"
         :row-key="row => row.id"
-        :pagination="false"
+        :pagination="mPagination"
         v-if="dataSource.length > 0"
         class="j-table-force-nowrap"
       >
@@ -138,19 +138,31 @@ export default {
         showSizeChanger: true,
         total: 0
       },
+      mPagination: {
+        pageNum: 1,
+        pageSize: 6,
+        pageSizeOptions: ['6', '12', '18'],
+        showTotal: (total, range) => {
+          return range[0] + '-' + range[1] + ' 共' + total + '条'
+        },
+        showQuickJumper: true,
+        showSizeChanger: true,
+        total: 0
+      },
       confirmLoading: false,
       url: {
         list: '/survey/surProject/surveyByType',
         queryById: '/survey/surProject/queryById',
-        saveSelectSurvey: '/survey/surProject/setSurvey',
+        // saveSelectSurvey: '/survey/surProject/setSurvey',
+        saveSelectSurvey:'/survey/surProject/setSurvey',
         addEmptySurvey: '/survey/surSurveyProject/add',
-        getEmptySurvey: '/survey/surSurveyProject/projectId/'
+        // getEmptySurvey: '/survey/surSurveyProject/projectId/'
       }
     }
   },
   mounted() {
     this.callback()
-    this.getEmptySurvey()
+    // this.getEmptySurvey()
     this.getSurveyList({ pageNum: 1, pageSize: 6, type: this.projectType })
   },
   methods: {
@@ -166,12 +178,14 @@ export default {
         }
       })
       this.selectedSurveyRowKeys = res.rowKeys || []
-      if (res.survey) {
-        this.currentSurveyId = res.survey.id
-        // this.dataSource = [{ surName: res.survey.surName, surContent: res.survey.surContent }]
+      if (res.surveyProjectList) {
+        this.currentSurveyId = res.surveyProjectList.id
+        // this.dataSource = [{ surName: res.surveyProjectList.surName, surContent: res.surveyProjectList.surContent }]
+        this.dataSource = res.surveyProjectList
         // this.defaultJson = res.survey.jsonPreview
+        console.log("=====",this.dataSource)
       }
-      console.log(res)
+      console.log("=====",res)
     },
     // 获取问卷列表
     async getSurveyList(data) {
@@ -208,27 +222,27 @@ export default {
         })
       }
     },
-    onSelectSurveyChange(selectedRowKeys, selectedRows) {
-      this.wrapper = ''
-      this.selectedSurveyRowKeys = selectedRowKeys
-      if (selectedRows.length > 0) {
-        this.currentSurveyId = selectedRows[0].id || ''
-      } else {
-        this.currentSurveyId = ''
-      }
-      // 只能同时选择一个问卷
-      if (selectedRowKeys.length > 1) {
-        this.$message.error('只能同时选择一个问卷')
-        this.selectedSurveyRowKeys = []
-        this.selectedSurveyRowKeys.push(selectedRowKeys[0])
-        this.wrapper = selectedRows[0].surName
-        this.model.surveyId = selectedRows[0].id
-        return
-      } else if (selectedRows.length > 0) {
-        this.wrapper = selectedRows[0].surName
-        this.model.surveyId = selectedRows[0].id
-      }
-    },
+    // onSelectSurveyChange(selectedRowKeys, selectedRows) {
+    //   this.wrapper = ''
+    //   this.selectedSurveyRowKeys = selectedRowKeys
+    //   if (selectedRows.length > 0) {
+    //     this.currentSurveyId = selectedRows[0].id || ''
+    //   } else {
+    //     this.currentSurveyId = ''
+    //   }
+    //   // 只能同时选择一个问卷
+    //   if (selectedRowKeys.length > 1) {
+    //     this.$message.error('只能同时选择一个问卷')
+    //     this.selectedSurveyRowKeys = []
+    //     this.selectedSurveyRowKeys.push(selectedRowKeys[0])
+    //     this.wrapper = selectedRows[0].surName
+    //     this.model.surveyId = selectedRows[0].id
+    //     return
+    //   } else if (selectedRows.length > 0) {
+    //     this.wrapper = selectedRows[0].surName
+    //     this.model.surveyId = selectedRows[0].id
+    //   }
+    // },
     showCreateSurvey() {
       if (this.$store.state.project.isPublished) {
         return this.$message.warning('该项目已经发布，不能修改该项目信息。')
@@ -258,7 +272,7 @@ export default {
           })
             .then(res => {
               this.modal.visible = false
-              this.getEmptySurvey()
+              // this.getEmptySurvey()
             })
             .catch(err => {
               this.$message.error(err.message)
@@ -272,32 +286,34 @@ export default {
       })
     },
     // 查询空白问卷
-    getEmptySurvey() {
-      this.dataSource = []
-      axios({
-        method: 'get',
-        url: this.url.getEmptySurvey + this.projectId
-      })
-        .then(res => {
-          console.log(res)
-          if (res.result) {
-            this.dataSource.push(res.result)
-            this.defaultJson = res.result.jsonPreview
-            this.surveyId = res.result.id
-            this.isDisabled = true
-          } else {
-            this.dataSource = []
-          }
-        })
-        .catch(err => {
-          this.$message.error(err.message)
-        })
-    },
+    // getEmptySurvey() {
+    //   this.dataSource = []
+    //   axios({
+    //     method: 'get',
+    //     url: this.url.getEmptySurvey + this.projectId
+    //   })
+    //     .then(res => {
+    //       console.log(res)
+    //       if (res.result) {
+    //         this.dataSource.push(res.result)
+    //         this.defaultJson = res.result.jsonPreview
+    //         this.surveyId = res.result.id
+    //         this.isDisabled = true
+    //       } else {
+    //         this.dataSource = []
+    //       }
+    //     })
+    //     .catch(err => {
+    //       this.$message.error(err.message)
+    //     })
+    // },
     // 设计空白问卷
-    designNewSurvey() {
+    designNewSurvey(record) {
+      console.log(record)
       if (this.$store.state.project.isPublished) {
         return this.$message.warning('该项目已经发布，不能修改该项目信息。')
       }
+      this.defaultJson = record.jsonPreview
       console.log('设计空白问卷')
       this.callback()
       this.visible = true
@@ -307,6 +323,44 @@ export default {
       this.visible = false
     },
     // 处理设计选择的问卷
+    // designSelectSurvey(record) {
+    //   const _this = this
+    //   if (this.$store.state.project.isPublished) {
+    //     return this.$message.warning('该项目已经发布，不能修改该项目信息。')
+    //   } else {
+    //     this.$confirm({
+    //       title: '确定要选择该问卷吗?',
+    //       content: '选择后将会覆盖已有的问卷',
+    //       onOk() {
+    //         _this.loadingHandle()
+    //         axios({
+    //           method: 'post',
+    //           url: _this.url.saveSelectSurvey,
+    //           data: {
+    //             id: _this.projectId,
+    //             rowKeys: [],
+    //             surveyId: record.id
+    //           }
+    //         })
+    //           .then(res => {
+    //             _this.$message.destroy()
+    //             _this.$message.success('复制成功')
+    //             _this.getEmptySurvey()
+    //             // this.$message.success('保存成功')
+    //           })
+    //           .catch(err => {
+    //             _this.$message.error('选择问卷失败，请稍后重试')
+    //           })
+    //       },
+    //       onCancel() {}
+    //     })
+    //   }
+
+    //   console.log(record)
+
+    //   console.log(record)
+    // },
+  // 处理设计选择的问卷
     designSelectSurvey(record) {
       const _this = this
       if (this.$store.state.project.isPublished) {
@@ -314,7 +368,6 @@ export default {
       } else {
         this.$confirm({
           title: '确定要选择该问卷吗?',
-          content: '选择后将会覆盖已有的问卷',
           onOk() {
             _this.loadingHandle()
             axios({
@@ -326,11 +379,12 @@ export default {
                 surveyId: record.id
               }
             })
-              .then(res => {
+              .then(res => { 
                 _this.$message.destroy()
                 _this.$message.success('复制成功')
-                _this.getEmptySurvey()
+                // _this.getEmptySurvey()
                 // this.$message.success('保存成功')
+                _this.callback()
               })
               .catch(err => {
                 _this.$message.error('选择问卷失败，请稍后重试')
@@ -344,6 +398,7 @@ export default {
 
       console.log(record)
     },
+
     loadingHandle() {
       const hide = this.$message.loading('复制问卷中，请耐心等待..', 0)
       return hide

@@ -51,76 +51,134 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
   @Autowired private ISurveyService surveyService;
   @Autowired private ISurPaymentService paymentService;
 
+//  @Override
+//  public Boolean setSurvey(SetProjectSurveyReq req) {
+//    // 根据项目id查询项目
+//    SurProject surProject = this.getById(req.getId());
+//    surProject.setSurveySrcId(req.getSurveyId());
+//    if (req.getRowKeys() != null) {
+//      surProject.setRowKeys(JSON.toJSONString(req.getRowKeys()));
+//    }
+//    // 查询出该问卷模板
+//    SurSurveyProject exitSurvey =
+//        surveyProjectMapper.selectOne(
+//            new LambdaQueryWrapper<SurSurveyProject>()
+//                .eq(SurSurveyProject::getSrcId, req.getSurveyId()));
+//    this.updateById(surProject);
+//    // 如果数据库已经存在该问卷的模板，则不需要再次插入
+//    if (exitSurvey != null) {
+//      surProject.setSurveyCurrentId(exitSurvey.getId());
+//      this.updateById(surProject);
+//      return true;
+//    }
+//    Survey survey = surveyMapper.selectById(req.getSurveyId());
+//    SurSurveyProject surSurveyProject = new SurSurveyProject();
+//    // 复制问卷
+//    BeanUtils.copyProperties(survey, surSurveyProject);
+//    surSurveyProject.setId(null);
+//    surSurveyProject.setSrcId(req.getSurveyId());
+//    surveyProjectMapper.insert(surSurveyProject);
+//    surProject.setSurveyCurrentId(surSurveyProject.getId());
+//    this.updateById(surProject);
+//    // 查询问卷的问题和选项
+//    List<SurQuestion> surQuestions =
+//        questionMapper.selectList(
+//            new LambdaQueryWrapper<SurQuestion>().eq(SurQuestion::getSurveyUid, req.getSurveyId()));
+//    surQuestions.forEach(
+//        surQuestion -> {
+//          // 查询对应的选项数组
+//          SurQuestionChoice questionChoice =
+//              questionChoiceMapper.selectOne(
+//                  new LambdaQueryWrapper<SurQuestionChoice>()
+//                      .eq(SurQuestionChoice::getSurveyUid, req.getSurveyId())
+//                      .eq(SurQuestionChoice::getQuestionId, surQuestion.getId()));
+//          SurQuestionProject questionProject = new SurQuestionProject();
+//          BeanUtils.copyProperties(surQuestion, questionProject);
+//          // 替换问卷id
+//          questionProject.setId(null);
+//          questionProject.setSurveyUid(surSurveyProject.getId());
+//          questionProjectMapper.insert(questionProject);
+//          // 复制选项
+//          SurQuestionChoiceProject surQuestionChoiceProject = new SurQuestionChoiceProject();
+//          BeanUtils.copyProperties(questionChoice, surQuestionChoiceProject);
+//          surQuestionChoiceProject.setId(null);
+//          surQuestionChoiceProject.setQuestionId(questionProject.getId());
+//          surQuestionChoiceProject.setSurveyUid(surSurveyProject.getId());
+//          questionChoiceProjectMapper.insert(surQuestionChoiceProject);
+//        });
+//    // 项目问卷关系表
+//    SurProjectSurvey one =
+//        projectSurveyMapper.selectOne(
+//            new LambdaQueryWrapper<SurProjectSurvey>()
+//                .eq(SurProjectSurvey::getProjectId, req.getId()));
+//    if (one != null) {
+//      one.setSurveyId(surSurveyProject.getId());
+//      projectSurveyMapper.updateById(one);
+//    } else {
+//      SurProjectSurvey surProjectSurvey = new SurProjectSurvey();
+//      surProjectSurvey.setProjectId(surProject.getId());
+//      surProjectSurvey.setSurveyId(req.getSurveyId());
+//      projectSurveyMapper.insert(surProjectSurvey);
+//    }
+//
+//    return true;
+//  }
+
   @Override
   public Boolean setSurvey(SetProjectSurveyReq req) {
     // 根据项目id查询项目
     SurProject surProject = this.getById(req.getId());
-    surProject.setSurveySrcId(req.getSurveyId());
+    Survey survey = surveyMapper.selectOne(new LambdaQueryWrapper<Survey>().eq(Survey::getId,req.getSurveyId()));
     if (req.getRowKeys() != null) {
       surProject.setRowKeys(JSON.toJSONString(req.getRowKeys()));
     }
+
     // 查询出该问卷模板
-    SurSurveyProject exitSurvey =
-        surveyProjectMapper.selectOne(
-            new LambdaQueryWrapper<SurSurveyProject>()
-                .eq(SurSurveyProject::getSrcId, req.getSurveyId()));
-    this.updateById(surProject);
+//    SurSurveyProject exitSurvey =
+//            surveyProjectMapper.selectOne(
+//                    new LambdaQueryWrapper<SurSurveyProject>()
+//                            .eq(SurSurveyProject::getSrcId, req.getSurveyId()));
+//    this.updateById(surProject);
     // 如果数据库已经存在该问卷的模板，则不需要再次插入
-    if (exitSurvey != null) {
-      surProject.setSurveyCurrentId(exitSurvey.getId());
-      this.updateById(surProject);
-      return true;
-    }
-    Survey survey = surveyMapper.selectById(req.getSurveyId());
+//    Survey survey = surveyMapper.selectById(req.getSurveyId());
     SurSurveyProject surSurveyProject = new SurSurveyProject();
     // 复制问卷
     BeanUtils.copyProperties(survey, surSurveyProject);
     surSurveyProject.setId(null);
     surSurveyProject.setSrcId(req.getSurveyId());
     surveyProjectMapper.insert(surSurveyProject);
-    surProject.setSurveyCurrentId(surSurveyProject.getId());
+//    surProject.setSurveyCurrentId(surSurveyProject.getId());
+    SurProjectSurvey surProjectSurvey1 = new SurProjectSurvey();
+    surProjectSurvey1.setSurveyId(surSurveyProject.getId());
+    surProjectSurvey1.setProjectId(req.getId());
+    projectSurveyMapper.insert(surProjectSurvey1);
     this.updateById(surProject);
     // 查询问卷的问题和选项
     List<SurQuestion> surQuestions =
-        questionMapper.selectList(
-            new LambdaQueryWrapper<SurQuestion>().eq(SurQuestion::getSurveyUid, req.getSurveyId()));
+            questionMapper.selectList(
+                    new LambdaQueryWrapper<SurQuestion>().eq(SurQuestion::getSurveyUid, req.getSurveyId()));
     surQuestions.forEach(
-        surQuestion -> {
-          // 查询对应的选项数组
-          SurQuestionChoice questionChoice =
-              questionChoiceMapper.selectOne(
-                  new LambdaQueryWrapper<SurQuestionChoice>()
-                      .eq(SurQuestionChoice::getSurveyUid, req.getSurveyId())
-                      .eq(SurQuestionChoice::getQuestionId, surQuestion.getId()));
-          SurQuestionProject questionProject = new SurQuestionProject();
-          BeanUtils.copyProperties(surQuestion, questionProject);
-          // 替换问卷id
-          questionProject.setId(null);
-          questionProject.setSurveyUid(surSurveyProject.getId());
-          questionProjectMapper.insert(questionProject);
-          // 复制选项
-          SurQuestionChoiceProject surQuestionChoiceProject = new SurQuestionChoiceProject();
-          BeanUtils.copyProperties(questionChoice, surQuestionChoiceProject);
-          surQuestionChoiceProject.setId(null);
-          surQuestionChoiceProject.setQuestionId(questionProject.getId());
-          surQuestionChoiceProject.setSurveyUid(surSurveyProject.getId());
-          questionChoiceProjectMapper.insert(surQuestionChoiceProject);
-        });
-    // 项目问卷关系表
-    SurProjectSurvey one =
-        projectSurveyMapper.selectOne(
-            new LambdaQueryWrapper<SurProjectSurvey>()
-                .eq(SurProjectSurvey::getProjectId, req.getId()));
-    if (one != null) {
-      one.setSurveyId(surSurveyProject.getId());
-      projectSurveyMapper.updateById(one);
-    } else {
-      SurProjectSurvey surProjectSurvey = new SurProjectSurvey();
-      surProjectSurvey.setProjectId(surProject.getId());
-      surProjectSurvey.setSurveyId(req.getSurveyId());
-      projectSurveyMapper.insert(surProjectSurvey);
-    }
-
+            surQuestion -> {
+              // 查询对应的选项数组
+              SurQuestionChoice questionChoice =
+                      questionChoiceMapper.selectOne(
+                              new LambdaQueryWrapper<SurQuestionChoice>()
+                                      .eq(SurQuestionChoice::getSurveyUid, req.getSurveyId())
+                                      .eq(SurQuestionChoice::getQuestionId, surQuestion.getId()));
+              SurQuestionProject questionProject = new SurQuestionProject();
+              BeanUtils.copyProperties(surQuestion, questionProject);
+              // 替换问卷id
+              questionProject.setId(null);
+              questionProject.setSurveyUid(surSurveyProject.getId());
+              questionProjectMapper.insert(questionProject);
+              // 复制选项
+              SurQuestionChoiceProject surQuestionChoiceProject = new SurQuestionChoiceProject();
+              BeanUtils.copyProperties(questionChoice, surQuestionChoiceProject);
+              surQuestionChoiceProject.setId(null);
+              surQuestionChoiceProject.setQuestionId(questionProject.getId());
+              surQuestionChoiceProject.setSurveyUid(surSurveyProject.getId());
+              questionChoiceProjectMapper.insert(surQuestionChoiceProject);
+            });
     return true;
   }
 

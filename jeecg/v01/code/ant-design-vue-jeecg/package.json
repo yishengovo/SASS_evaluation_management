@@ -16,6 +16,7 @@
     "@toast-ui/editor": "^2.1.2",
     "ant-design-vue": "^1.7.2",
     "axios": "^0.18.0",
+    "cache-loader": "^4.1.0",
     "china-area-data": "^5.0.1",
     "chokidar": "^3.0.0",
     "clipboard": "^2.0.4",
