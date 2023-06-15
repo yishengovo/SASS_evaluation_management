@@ -260,6 +260,18 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
         return Result.ok(page);
     }
 
+    @ApiOperation(value = "查询用户购买的问卷模板的原问卷的信息", notes = "查询用户购买的问卷模板的原问卷的信息")
+    @PostMapping(value = "/getMySurveyTemplate")
+    public Result<?> getMySurveyTemplateList(@RequestBody ProjectAdvancedQueryReq req) {
+        // 获取请求头
+        ServletRequestAttributes requestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = requestAttributes.getRequest();
+        String tenantId = request.getHeader("tenant-id");
+        PageResp<Survey> page = userProjectService.getMySurveyTemplateList(req, tenantId);
+        return Result.ok(page);
+    }
+
     @ApiOperation(value = "查询当前租户购买过的问卷集合", notes = "查询当前租户购买过的问卷集合")
     @PostMapping(value = "/getHavingSurveyTemplate")
     public Result<List<String>> getHavingSurveyTemplateList() {
@@ -965,6 +977,15 @@ public class UserProjectController extends JeecgController<UserProject, IUserPro
     @RequestMapping(value = "/exportXls")
     public ModelAndView exportXls(HttpServletRequest request, UserProject userProject) {
         return super.exportXls(request, userProject, UserProject.class, "用户端项目表");
+    }
+
+    @RequestMapping(value = "/exportIncompleteUsers")
+    public void exportIncompleteUsers(HttpServletResponse response, String projectId) {
+        try {
+            excelService.exportIncompleteUsers(response,projectId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

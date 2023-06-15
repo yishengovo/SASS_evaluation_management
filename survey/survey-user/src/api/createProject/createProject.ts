@@ -36,6 +36,7 @@ enum CreateProjectApi {
   SaveScoreById = '/client/userProject/setScore',
   CreateEvaluationProject = '/client/userProject/createEvaluationProject',
   GetSurveyTemplate = '/client/userProject/getSurveyTemplate',
+  GetMySurveyTemplate = '/client/userProject/getMySurveyTemplate',
   GetSurveyJson = '/client/userProject/getSurveyTemplateById/',
   GetSelectedSurvey = '/client/userProject/getEvaluationSurvey/',
   GetEvaluationProjectPerson = '/client/userProject/queryEvaluationUser',
@@ -121,6 +122,17 @@ export const getSurveyTemplate = (
   data: ISurveyPagenation
 ): Promise<IDataType<ISurveyTemplateResult>> => {
   return api.post(CreateProjectApi.GetSurveyTemplate, data)
+}
+
+/**
+ * @description: 获取租户自己购买的问卷模板
+ * @param {ISurveyPagenation} data
+ * @return {*}
+ */
+export const getMySurveyTemplate = (
+  data: ISurveyPagenation
+): Promise<IDataType<ISurveyTemplateResult>> => {
+  return api.post(CreateProjectApi.GetMySurveyTemplate, data)
 }
 
 /**

@@ -21,23 +21,6 @@ import { Notice } from '/@src/components/base/au-notice/Notice'
 import { useWizard } from '/@src/stores/wizard'
 
 import noData from '/@src/assets/noData.png'
-
-const columns = {
-  num: {
-    label: '编号',
-  },
-  surName: {
-    label: '问卷名称',
-  },
-  surContent: {
-    label: '问卷描述',
-  },
-  actionSlots: {
-    label: '操作',
-    grow: true,
-    align: 'end',
-  },
-}
 const wizard = useWizard()
 const surveyTemplate = ref<SurveyTemplate[]>([])
 const surveyList = ref<SurveyList[] | ISurvey[]>([])
@@ -45,37 +28,21 @@ const surveyIdList = ref<string[]>([])
 const isEmpty = ref(false)
 const isDisable = localStorage.getItem('isView') === 'view'
 const isLoaderActive = ref(false)
-const emits = defineEmits<{ (e: 'afterCreate', projectId: string): void }>()
+const emits = defineEmits<{ (e: 'afterOK', jsonPreview: string): void }>()
 // 分页相关
 const ipagination = reactive({
   currentPage: 1,
   pageSize: 10,
   total: 0,
 })
-// 获取已经选择的问卷列表
-const getSelectedList = async () => {
-  surveyIdList.value = []
-  const { data: res } = await getSelectedSurvey(wizard.data.id as string)
-  console.log("res ==============================", res)
-  res.result.forEach((item: ISurvey) => {
-    surveyIdList.value.push(item.id)
-  })
 
-  surveyList.value = res.result ?? []
-  for (let i = 0; i < surveyList.value.length; i++) {
-    surveyList.value[i].num = i + 1
-  }
-}
-if (wizard.data.id) {
-  getSelectedList()
-}
 // 获取问卷模板
 const getSurveyTemplates = async () => {
   isLoaderActive.value = true
   const { data: res } = await getMySurveyTemplate({
     pageNum: ipagination.currentPage,
     pageSize: ipagination.pageSize,
-    type: '测评',
+    type: wizard.data.type as string,
   })
   if (res.code !== 200) {
     isLoaderActive.value = false
@@ -118,61 +85,11 @@ const handleViewSurvey = async (id: string, isShowFooter: boolean) => {
   console.log(surveyIdList.value)
 }
 
-// 创建测评项目
-const createProject = async () => {
-  const { data: res } = await createEvaluationProject({
-    id: (wizard.data.id as string) ?? null,
-    name: wizard.data.name,
-    content: wizard.data.description,
-    type: wizard.data.type as string,
-    survey: surveyIdList.value ?? [],
-  })
-  if (res.code !== 200) {
-    return Notice({
-      notice_type: 'error',
-      message: '引用模板失败，请稍后再试试',
-    })
-  }
-
-  emits('afterCreate', res.result.project.id)
-  wizard.data.id = res.result.project.id
-  wizard.data.type = res.result.project.type
-  surveyList.value = res.result.surveyList
-}
 const handleOK = async () => {
   showSurveyPreview.value = false
-  if (surveyIdList.value.includes(currentSurveyId.value)) {
-    return Notice({
-      notice_type: 'error',
-      message: '已经引用过该问卷',
-    })
-  }
-  surveyIdList.value.push(currentSurveyId.value)
-  await createProject()
-  await getSelectedList()
+  emits('afterOK', surveyJson.value)
 }
 
-// 处理取消引用问卷
-const cancelActionsOpen = ref(false)
-const currentCancelSurveyId = ref('')
-const showCancelSurvey = (surveyId: string) => {
-  currentCancelSurveyId.value = surveyId
-  cancelActionsOpen.value = true
-}
-const handleCancelSurveyConfirm = async () => {
-  console.log(surveyList.value.length)
-  if (surveyIdList.value.length === 1) {
-    surveyIdList.value = []
-  } else {
-    surveyIdList.value = surveyIdList.value.filter(
-      (item) => item !== currentCancelSurveyId.value
-    )
-  }
-  await createProject()
-  await getSelectedList()
-  console.log(surveyIdList.value)
-  cancelActionsOpen.value = false
-}
 // 分页变化时
 const paginationChange = (value: number) => {
   ipagination.currentPage = value
@@ -183,7 +100,7 @@ const paginationChange = (value: number) => {
 <template>
   <div class="assessmentContent">
     <VLoader size="large" :active="isLoaderActive" translucent class="list-loader">
-      <VCard>
+      <!-- <VCard>
         <span class="title">已经选择问卷</span>
         <VFlexTable :data="surveyList" :columns="columns" compact rounded>
           <template #body-cell="{ row, column }">
@@ -191,10 +108,10 @@ const paginationChange = (value: number) => {
               <Tippy>
                 <div class="text-ellipsis">{{ row.surName }}</div>
                 <template #content> {{ row.surName }} </template>
-              </Tippy>
+              </Tippy> -->
               <!-- <small class="tag">{{ row.choice }}</small> -->
               <!-- {{ row.choice }} -->
-            </div>
+            <!-- </div>
             <div v-if="column.key === 'surContent'">
               <Tippy>
                 <div class="text-ellipsis">
@@ -203,11 +120,11 @@ const paginationChange = (value: number) => {
                 <template #content>
                   {{ row.surContent == '' ? '暂无描述' : row.surContent ?? '暂无描述' }}
                 </template>
-              </Tippy>
+              </Tippy> -->
 
               <!-- <small class="tag">{{ row.choice }}</small> -->
               <!-- {{ row.choice }} -->
-            </div>
+            <!-- </div>
             <VButtons v-if="column.key === 'actionSlots'">
               <VButton color="primary" @click="handleViewSurvey(row.id, false)">
                 预览问卷
@@ -218,11 +135,10 @@ const paginationChange = (value: number) => {
             </VButtons>
           </template>
         </VFlexTable>
-      </VCard>
-
+      </VCard> -->
       <disableEle :disable="isDisable">
         <VCard style="margin-top: 50px">
-          <div class="title">使用测评模板</div>
+          <div class="title">使用调查模板</div>
           <div v-if="surveyTemplate.length > 0" class="survey-templates">
             <div
               v-for="(item, index) in surveyTemplate"
@@ -280,19 +196,6 @@ const paginationChange = (value: number) => {
     >
       <SurveyPreview :survey-json="surveyJson"></SurveyPreview>
     </AuDialog>
-    <VModal
-      :open="cancelActionsOpen"
-      actions="center"
-      title="提示"
-      @close="cancelActionsOpen = false"
-    >
-      <template #content>
-        <VPlaceholderSection title="您确认要取消引用此问卷吗?" />
-      </template>
-      <template #action>
-        <VButton color="primary" raised @click="handleCancelSurveyConfirm"> 确定</VButton>
-      </template>
-    </VModal>
   </div>
 </template>
 

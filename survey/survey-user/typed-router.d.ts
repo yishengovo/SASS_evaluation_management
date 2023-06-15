@@ -85,6 +85,7 @@ declare module 'vue-router/auto/routes' {
     '/wizard-v1/project-evaluation': RouteRecordInfo<'/wizard-v1/project-evaluation', '/wizard-v1/project-evaluation', Record<never, never>, Record<never, never>>,
     '/wizard-v1/project-info': RouteRecordInfo<'/wizard-v1/project-info', '/wizard-v1/project-info', Record<never, never>, Record<never, never>>,
     '/wizard-v1/project-setting': RouteRecordInfo<'/wizard-v1/project-setting', '/wizard-v1/project-setting', Record<never, never>, Record<never, never>>,
+    '/wizard-v1/project-surveyand360': RouteRecordInfo<'/wizard-v1/project-surveyand360', '/wizard-v1/project-surveyand360', Record<never, never>, Record<never, never>>,
     '/wizard-v1/project-team': RouteRecordInfo<'/wizard-v1/project-team', '/wizard-v1/project-team', Record<never, never>, Record<never, never>>,
     '/wizard-v1/project-tools': RouteRecordInfo<'/wizard-v1/project-tools', '/wizard-v1/project-tools', Record<never, never>, Record<never, never>>,
     '/wizard-v1/question/question-list': RouteRecordInfo<'/wizard-v1/question/question-list', '/wizard-v1/question/question-list', Record<never, never>, Record<never, never>>,

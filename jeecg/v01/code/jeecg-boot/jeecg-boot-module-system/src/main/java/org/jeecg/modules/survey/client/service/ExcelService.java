@@ -20,4 +20,5 @@ public interface ExcelService {
     void exportInvestigation(HttpServletResponse response, ExportReq req) throws Exception;
     //360问卷导出
     void export360(HttpServletResponse response, ExportReq req) throws Exception;
+    void exportIncompleteUsers(HttpServletResponse response, String projectId) throws Exception;
 }
