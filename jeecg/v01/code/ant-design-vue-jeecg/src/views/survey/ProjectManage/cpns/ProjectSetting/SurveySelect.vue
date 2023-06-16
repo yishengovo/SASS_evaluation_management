@@ -1,7 +1,7 @@
 <template>
   <div>
     <a-spin :spinning="confirmLoading">
-      <a-button type="primary" style="margin: 30px 0 20px 0" @click="showCreateSurvey" :disabled="isDisabled"
+      <a-button type="primary" style="margin: 30px 0 20px 0" @click="showCreateSurvey" :disabled="true"
         >新建空白问卷</a-button
       >
       <a-table
@@ -15,6 +15,7 @@
         <template #bodyCell="{ column, text, record }"></template>
         <!-- 操作按钮区域 -->
         <template slot="action" slot-scope="text, record">
+          <a-button type="danger" @click="deleteChoseSurvey(record)">删除</a-button> &nbsp;&nbsp;
           <a-button type="primary" @click="designNewSurvey(record)">设计此问卷</a-button>
         </template>
       </a-table>
@@ -157,6 +158,7 @@ export default {
         saveSelectSurvey:'/survey/surProject/setSurvey',
         addEmptySurvey: '/survey/surSurveyProject/add',
         // getEmptySurvey: '/survey/surSurveyProject/projectId/'
+        deleteSelectSurvey:'survey/surProject/deleteSelectSurvey'
       }
     }
   },
@@ -243,6 +245,34 @@ export default {
     //     this.model.surveyId = selectedRows[0].id
     //   }
     // },
+    deleteChoseSurvey(record){
+      const _this = this
+      this.$confirm({
+          title: '确定要删除该问卷吗?',
+          onOk() {
+            _this.loadingDeleteHandle()
+            axios({
+              method: 'delete',
+              url: _this.url.deleteSelectSurvey,
+              params: {
+                surveyId: record.id
+              }
+            })
+              .then(res => { 
+                _this.$message.destroy()
+                _this.$message.success('删除成功')
+                // _this.getEmptySurvey()
+                // this.$message.success('保存成功')
+                _this.callback()
+              })
+              .catch(err => {
+                _this.$message.error('选择问卷失败，请稍后重试')
+              })
+          },
+          onCancel() {}
+        })
+      console.log(record)
+    },
     showCreateSurvey() {
       if (this.$store.state.project.isPublished) {
         return this.$message.warning('该项目已经发布，不能修改该项目信息。')
@@ -401,6 +431,10 @@ export default {
 
     loadingHandle() {
       const hide = this.$message.loading('复制问卷中，请耐心等待..', 0)
+      return hide
+    },
+    loadingDeleteHandle() {
+      const hide = this.$message.loading('删除问卷中，请耐心等待..', 0)
       return hide
     },
     // 下一步

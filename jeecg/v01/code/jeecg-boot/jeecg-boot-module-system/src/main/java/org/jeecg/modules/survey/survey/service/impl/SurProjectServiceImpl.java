@@ -379,6 +379,19 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
   }
 
   @Override
+  public Boolean deleteSelectSurvey(String surveyId) {
+    SurProjectSurvey surProjectSurvey = new SurProjectSurvey();
+    surProjectSurvey = projectSurveyMapper.selectOne(new LambdaQueryWrapper<SurProjectSurvey>().eq(SurProjectSurvey::getSurveyId,surveyId));
+    if(surProjectSurvey != null){
+      projectSurveyMapper.delete(new LambdaQueryWrapper<SurProjectSurvey>().eq(SurProjectSurvey::getSurveyId,surveyId));
+      surveyProjectMapper.delete(new LambdaQueryWrapper<SurSurveyProject>().eq(SurSurveyProject::getId,surveyId));
+      return true;
+    }
+
+    return false;
+  }
+
+  @Override
   public ProjectResultDto getSurveyResult(String projectId) {
     // 查询项目对象
     SurProject project = this.getById(projectId);

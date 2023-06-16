@@ -477,6 +477,27 @@ public Result<?> addSurvey(@RequestBody SetProjectSurveyReq req) {
     return Result.OK("批量删除成功!");
   }
 
+
+  /**
+   * 删除选择的问卷
+   *
+   * @param surveyId
+   * @return
+   */
+  @AutoLog(value = "问卷项目表-选择问卷删除")
+  @ApiOperation(value = "问卷项目表-选择问卷删除", notes = "问卷项目表-选择问卷删除")
+  @DeleteMapping(value = "/deleteSelectSurvey")
+  public Result<String> deleteSelectSurvey(@RequestParam(name = "surveyId", required = true) String surveyId) {
+
+    if (surProjectService.deleteSelectSurvey(surveyId)){
+      return Result.OK("删除成功!");
+    }
+    return Result.error("删除失败!");
+
+
+
+  }
+
 //  /**
 //   * 通过id查询
 //   *

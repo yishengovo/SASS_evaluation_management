@@ -33,6 +33,8 @@ public interface ISurProjectService extends IService<SurProject> {
   Boolean replaceUserJson();
   // 新建360度类型的项目
   Boolean new360Survey(SurProject req);
+  //删除指定问卷
+  Boolean deleteSelectSurvey(String surveyId);
   // 返回问卷的题目json和结果
   ProjectResultDto getSurveyResult(String projectId);
   // 返回问卷的每个题目的统计信息
