@@ -301,6 +301,7 @@ public Result<?> addSurvey(@RequestBody SetProjectSurveyReq req) {
   if (surProjectService.setSurvey(req)) {
     return Result.OK("设置成功!");
   }
+  System.out.println(surProjectService.setSurvey(req));
   return Result.error("设置失败");
 }
 

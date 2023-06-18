@@ -129,6 +129,18 @@ public class SurProjectServiceImpl extends ServiceImpl<SurProjectMapper, SurProj
     // 根据项目id查询项目
     SurProject surProject = this.getById(req.getId());
     Survey survey = surveyMapper.selectOne(new LambdaQueryWrapper<Survey>().eq(Survey::getId,req.getSurveyId()));
+
+    List<SurProjectSurvey> surProjectSurveys = projectSurveyMapper.selectList(new LambdaQueryWrapper<SurProjectSurvey>().eq(SurProjectSurvey::getProjectId,surProject.getId()));
+
+    for (SurProjectSurvey surProjectSurvey : surProjectSurveys) {
+      String surveyId = surProjectSurvey.getSurveyId();
+      SurSurveyProject surSurveyProject = surveyProjectMapper.selectById(surveyId);
+      String srcId = surSurveyProject.getSrcId();
+      if(srcId.equals(req.getSurveyId())){
+        return  false;
+      }
+    }
+
     if (req.getRowKeys() != null) {
       surProject.setRowKeys(JSON.toJSONString(req.getRowKeys()));
     }

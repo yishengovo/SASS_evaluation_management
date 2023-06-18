@@ -410,11 +410,20 @@ export default {
               }
             })
               .then(res => { 
+                if(res.success){
                 _this.$message.destroy()
                 _this.$message.success('复制成功')
                 // _this.getEmptySurvey()
                 // this.$message.success('保存成功')
                 _this.callback()
+                }else{
+                _this.$message.destroy()
+                _this.$message.error('复制失败,无法复制相同问卷')
+                // _this.getEmptySurvey()
+                // this.$message.success('保存成功')
+                _this.callback()
+                }
+
               })
               .catch(err => {
                 _this.$message.error('选择问卷失败，请稍后重试')
